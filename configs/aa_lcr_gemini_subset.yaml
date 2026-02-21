@@ -28,7 +28,7 @@ judges:
   strategy: "fixed"
   fixed:
     provider: "openai"
-    model: "gpt-5-mini-2025-08-07"
+    model: "gpt-4o-mini-2024-07-18"
   templates:
     correctness: "aa_lcr_equality"
     hallucination: "nli_sentence"
