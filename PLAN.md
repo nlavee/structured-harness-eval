@@ -86,6 +86,7 @@ Build a modular, open-source evaluation harness that rigorously tests the above 
 | Document sets | 30 |
 | Domains | 7 (Academia, Company Reports, Government Consultations, Industry Reports, Legal, Marketing, Survey Reports) |
 | Avg context length | ~99,325 tokens per document set (~71k–115k range) |
+| Prompt Construction | Documents are loaded according to the source CSV's `data_source_filenames` to ensure correct ordering, encapsulated in BEGIN/END blocks. |
 | Official judge | Binary CORRECT / INCORRECT (Qwen3 235B reference) |
 
 **Paper scope:** The v1 paper uses all 100 AA-LCR samples. Per-domain breakdowns (~14 samples each) are **exploratory only** and are explicitly framed as such in the paper. Aggregate cross-system comparisons have adequate statistical power for publication.
@@ -110,6 +111,8 @@ glass/                              # Python package (pip install -e .)
 │                                   #  `glass export-human-eval run_id`
 │                                   #  `glass import-human-eval run_id labels.csv`
 │                                   #  `glass stats run_id`
+│
+├── tui.py                          # Rich-based Terminal User Interface
 │
 ├── config/
 │   ├── schema.py                   # Pydantic models: ExperimentConfig, SystemConfig, etc.
@@ -234,7 +237,11 @@ class EvaluationSample(BaseModel):
 class RawOutput(BaseModel):
     sample_id: str
     system_name: str                    # e.g., "structured_harness_claude"
+    model: str | None = None            # Logged for reproducibility
+    command: list[str]                  # AP-8: exact command invoked
+    prompt: str                         # Full prompt sent via stdin for debugging
     output: str
+    chain_of_thought: str | None = None # CoT/reasoning captured when quiet=False
     latency_s: float
     exit_code: int
     stderr: str
@@ -245,6 +252,7 @@ class EvalResult(BaseModel):
     sample_id: str
     system_name: str
     domain: str
+    judge_model: str | None = None      # Judge provider/model metadata
     metrics: dict[str, float]           # e.g., {"judge_score": 1.0, "hallucination_rate": 0.0}
     judge_outputs: dict[str, str]       # Raw judge text responses (for auditability)
     human_label: int | None = None      # 0/1 if this sample was spot-checked
@@ -405,7 +413,8 @@ Phase 1 — Inference  (resumable via checkpoint.json)
       ├── subprocess.run(command, timeout=config.timeout_s)
       ├── Capture: stdout, stderr, exit_code, wall-clock latency
       ├── Classify error_type if applicable
-      ├── Save RawOutput → runs/{run_id}/inference/{sut_name}/sample_{id}.json
+      ├── Save RawOutput (with prompt and command) → runs/{run_id}/inference/{sut_name}/sample_{id}.json
+      ├── Update rich TUI progress
       ├── Log: "[GLASS] Saved raw output → runs/{run_id}/inference/{sut_name}/sample_{id}.json"
       └── Update checkpoint.json
 
@@ -413,6 +422,7 @@ Phase 2 — Evaluation
   For each (sample, SUT) pair:
     ├── Load RawOutput from runs/{run_id}/inference/{sut_name}/sample_{id}.json
     ├── Run deterministic metrics (exact_match, soft_recall, verbosity, refusal, error)
+    ├── If SUT errored (error_type is not None), set judge metrics to None and skip judges (AP-15)
     ├── strategy.assign_judge(sut_name) → judge
     ├── judge.evaluate_correctness(...) → judge_score + raw response
     ├── judge.evaluate_hallucination(...) → hallucination_rate + per-sentence labels

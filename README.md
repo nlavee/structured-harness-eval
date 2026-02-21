@@ -39,8 +39,9 @@ glass stats runs/<run_id>
 GLASS answers a precise research question: **Does a Structured Execution Harness achieve higher task success and lower hallucination rates than raw CLI runtimes while holding the underlying model constant?**
 
 ### Key Features
-- **Transparent-Box Design:** Preserves 100% of raw SUT outputs and judge rationales.
-- **Two-Phase Pipeline:** Decouples expensive model inference from evaluation/metrics.
+- **Transparent-Box Design:** Preserves 100% of raw SUT outputs and judge rationales, including full prompts and commands.
+- **Two-Phase Pipeline:** Decouples expensive model inference from evaluation/metrics, featuring a rich Terminal User Interface (TUI) with real-time progress and dual logging.
+- **Robust Error Handling:** Correctly handles timeouts, system crashes, and API failures by explicitly marking metrics as missing instead of corrupting downstream statistics.
 - **Model-Aware Judge Rotation:** Eliminates self-preferencing bias by ensuring no model judges its own output.
 - **Publication-Ready Stats:** Automated bootstrap confidence intervals and Wilcoxon signed-rank tests.
 

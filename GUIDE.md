@@ -204,10 +204,11 @@ runs/
 └── {run_id}/
     ├── manifest.json          # Git hash, library versions, config SHA256, timestamp, seed
     ├── config.yaml            # Frozen config (canonical source of truth — AP-22)
+    ├── glass.log              # Full pipeline log (console + file)
     │
     ├── inference/             # Phase 2: Raw SUT outputs (cached; supports resume)
     │   ├── claude-code/
-    │   │   ├── sample_1.json  # RawOutput: output, latency, exit_code, stderr, command (AP-8)
+    │   │   ├── sample_1.json  # RawOutput: prompt, output, latency, exit_code, stderr, command (AP-8)
     │   │   └── checkpoint.json
     │   ├── structured_harness_claude/
     │   └── ...
@@ -234,6 +235,7 @@ runs/
 glass/
 ├── cli.py                  # CLI entry point (run, stats, export-human-eval, import-human-eval)
 ├── pipeline.py             # Orchestration: Phases 0–4
+├── tui.py                  # Rich-based Terminal User Interface and dual logging
 ├── config/
 │   └── schema.py           # Pydantic models: Config, SystemConfig, JudgeConfig, etc.
 ├── datasets/
@@ -351,11 +353,11 @@ The most common implementation mistakes and how GLASS prevents them:
 | **AP-3** Metric failure → 0.0 | Return `None`; pipeline records `None` in `EvalResult.metrics` |
 | **AP-5** `shell=True` subprocess | `SystemUnderTest._run_command()` always uses list args |
 | **AP-6** Large CLI args | Prompt passed via `subprocess.communicate(input=prompt.encode())` |
-| **AP-8** Command not recorded | `RawOutput.command: List[str]` is required field |
+| **AP-8** Command not recorded | `RawOutput.command: List[str]` is required; `prompt` is also saved |
 | **AP-10** Self-judging | `RotationStrategy` maps system family → different provider |
 | **AP-11** Mutable judge prompts | Constants in `glass/judges/prompts.py`, versioned (V1) |
 | **AP-14** No normalisation | `normalize_answer()` in `metrics/utils.py` |
-| **AP-15** HR on error output | Pipeline checks `raw_output.error_type` before calling judge |
+| **AP-15** HR on error output | Pipeline checks `raw_output.error_type`; if present, skips judges and sets metrics to `None` |
 | **AP-17** Means without CIs | `summary.md` always shows bootstrap 95% CI |
 | **AP-18** t-test on binary scores | Wilcoxon signed-rank (scipy) throughout |
 | **AP-19** Per-domain significance | Caveat in `summary.md`; no Wilcoxon per-domain |
