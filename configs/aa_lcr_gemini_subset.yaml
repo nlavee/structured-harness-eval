@@ -1,0 +1,42 @@
+experiment:
+  name: "gemini_cli_subset_test"
+  seed: 42
+
+dataset:
+  name: "aa_lcr"
+  samples: 5
+  domains: null
+
+systems:
+  - name: "gemini-cli"
+    type: "gemini"
+    command: ["gemini", "-p"]
+    timeout_s: 600
+    env: {}
+
+metrics:
+  - exact_match
+  - soft_recall
+  - latency_s
+  - verbosity
+  - refusal_rate
+  - error_rate
+
+judges:
+  strategy: "fixed"
+  fixed:
+    provider: "openai"
+    model: "gpt-5-mini-2025-08-07"
+  templates:
+    correctness: "aa_lcr_equality"
+    hallucination: "nli_sentence"
+
+statistics:
+  bootstrap_resamples: 100
+  alpha: 0.05
+  primary_test: "wilcoxon_one_tailed"
+  secondary_test: "wilcoxon_two_tailed"
+
+output:
+  runs_dir: "./runs"
+  log_level: "INFO"

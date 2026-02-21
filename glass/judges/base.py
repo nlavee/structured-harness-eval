@@ -8,7 +8,7 @@ class EvalResult(BaseModel):
     sample_id: str
     system_name: str
     domain: str
-    metrics: Dict[str, float]
+    metrics: Dict[str, Optional[float]]
     judge_outputs: Dict[str, str]
     human_label: Optional[int] = None
 
