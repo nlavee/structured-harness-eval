@@ -26,6 +26,7 @@ def data():
         sample_id="1",
         system_name="s",
         command=["stub"],
+        prompt="",
         output="paris",
         latency_s=1,
         exit_code=0,

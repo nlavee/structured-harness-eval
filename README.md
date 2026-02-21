@@ -14,13 +14,19 @@ cd glass
 pip install -e .
 ```
 
-**2. Run a full evaluation:**
+**2. Download the AA-LCR dataset:**
+
+```bash
+python scripts/download_aalcr.py
+```
+
+**3. Run a full evaluation:**
 
 ```bash
 glass run configs/aa_lcr_full.yaml
 ```
 
-**3. Compute statistics on a completed run:**
+**4. Compute statistics on a completed run:**
 
 ```bash
 glass stats runs/<run_id>

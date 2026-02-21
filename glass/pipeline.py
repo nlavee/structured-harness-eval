@@ -54,7 +54,7 @@ class Pipeline:
         # Load Dataset
         ds_cls = get_dataset_class(self.config.dataset.name)
         dataset = ds_cls()
-        dataset.load()
+        dataset.load(dataset_config=self.config.dataset)
         samples = dataset.get_samples()
 
         # Filter samples if config

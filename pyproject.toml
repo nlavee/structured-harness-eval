@@ -22,7 +22,9 @@ dependencies = [
     "anthropic",
     "google-generativeai",
     "openai",
-    "tabulate"
+    "tabulate",
+    "python-dotenv",
+    "huggingface_hub",
 ]
 
 [project.optional-dependencies]

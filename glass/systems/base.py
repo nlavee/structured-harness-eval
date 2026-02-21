@@ -14,6 +14,7 @@ class RawOutput(BaseModel):
     sample_id: str
     system_name: str
     command: List[str]  # AP-8: exact command invoked (required for reproducibility)
+    prompt: str  # Full prompt sent via stdin for debugging/reproducibility
     output: str
     latency_s: float
     exit_code: int
@@ -63,6 +64,7 @@ class SystemUnderTest(ABC):
                 sample_id=sample_id,
                 system_name=self.config.name,
                 command=command,
+                prompt=prompt,
                 output=stdout,
                 latency_s=latency,
                 exit_code=exit_code,
@@ -78,6 +80,7 @@ class SystemUnderTest(ABC):
                 sample_id=sample_id,
                 system_name=self.config.name,
                 command=command,
+                prompt=prompt,
                 output="",
                 latency_s=latency,
                 exit_code=124,  # Timeout
@@ -91,6 +94,7 @@ class SystemUnderTest(ABC):
                 sample_id=sample_id,
                 system_name=self.config.name,
                 command=command,
+                prompt=prompt,
                 output="",
                 latency_s=latency,
                 exit_code=1,

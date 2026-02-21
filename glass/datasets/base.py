@@ -23,8 +23,12 @@ class EvaluationSample(BaseModel):
 
 class DatasetAdapter(ABC):
     @abstractmethod
-    def load(self) -> None:
-        """Load the dataset (download, extract, etc.)"""
+    def load(self, dataset_config=None) -> None:
+        """Load the dataset (download, extract, etc.)
+        
+        Args:
+            dataset_config: Optional DatasetConfig with settings like dataset_folder.
+        """
         pass
 
     @abstractmethod

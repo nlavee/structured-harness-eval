@@ -41,7 +41,7 @@ def test_gemini_default_command(mock_popen, sample):
     sys.generate(sample)
 
     args, kwargs = mock_popen.call_args
-    assert args[0] == ["gemini", "-p"]
+    assert args[0] == ["gemini", "--output-format", "text"]
     assert kwargs.get("shell") is not True  # AP-5: no shell=True
     assert kwargs["stdin"] is not None  # AP-6: prompt via stdin
 
@@ -58,7 +58,7 @@ def test_gemini_command_in_output(mock_popen, sample):
     sys = GeminiSystem(config)
     output = sys.generate(sample)
 
-    assert output.command == ["gemini", "-p"]
+    assert output.command == ["gemini", "--output-format", "text"]
 
 
 # --------------------------------------------------------------------------- #

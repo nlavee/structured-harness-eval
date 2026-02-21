@@ -20,6 +20,7 @@ def make_output(
         sample_id="x",
         system_name="s",
         command=["stub"],
+        prompt="",
         output=output_text,
         latency_s=latency,
         exit_code=exit_code,

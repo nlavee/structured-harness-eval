@@ -13,6 +13,7 @@ class DatasetConfig(BaseModel):
     name: str
     samples: Optional[int] = None
     domains: Optional[List[str]] = None
+    dataset_folder: Optional[str] = None
 
 
 class SystemConfig(BaseModel):

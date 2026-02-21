@@ -5,6 +5,7 @@ experiment:
 
 dataset:
   name: "aa_lcr"
+  dataset_folder: "data/AA-LCR/AA-LCR_extracted-text/lcr"
   samples: null
   domains: null
 

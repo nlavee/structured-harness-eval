@@ -20,6 +20,7 @@ def make_raw(sample_id, system, error_type=None):
         sample_id=sample_id,
         system_name=system,
         command=["stub"],
+        prompt="",
         output="answer",
         latency_s=1.0,
         exit_code=0 if error_type is None else 1,

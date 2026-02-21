@@ -42,6 +42,7 @@ def test_pipeline_flow(mock_strat, mock_metric_cls, mock_sys_cls, mock_ds_cls, m
         "sample_id": "1",
         "system_name": "s1",
         "command": ["claude", "--print"],
+        "prompt": "c",
         "output": "o",
         "latency_s": 0.1,
         "exit_code": 0,

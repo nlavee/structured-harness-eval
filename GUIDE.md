@@ -26,7 +26,7 @@ source venv/bin/activate
 ### Dependencies
 ```bash
 pip install --upgrade pip
-pip install pydantic pyyaml pandas numpy scipy datasets nltk click rich anthropic google-generativeai openai tabulate pytest
+pip install pydantic pyyaml pandas numpy scipy datasets nltk click rich anthropic google-generativeai openai tabulate python-dotenv huggingface_hub pytest
 ```
 
 ### API Keys
@@ -46,6 +46,40 @@ export OPENAI_API_KEY="sk-..."
 ```bash
 pip install -e .
 ```
+
+### AA-LCR Dataset Setup
+
+GLASS requires the AA-LCR dataset files to be available locally. Run the download script to fetch and set up the data automatically:
+
+```bash
+python scripts/download_aalcr.py
+```
+
+This downloads the dataset from [HuggingFace](https://huggingface.co/datasets/ArtificialAnalysis/AA-LCR), extracts the documents, fixes any filename encoding issues, and verifies all files. The resulting structure:
+```
+data/AA-LCR/
+├── AA-LCR_Dataset.csv
+├── AA-LCR_extracted-text/
+│   └── lcr/
+│       ├── Academia/
+│       ├── Company_Documents/
+│       └── ...
+└── README.md
+```
+
+To download to a custom location, use `--dest`:
+```bash
+python scripts/download_aalcr.py --dest /path/to/data
+```
+
+You can customize the dataset path in your config via the `dataset_folder` option:
+```yaml
+dataset:
+  name: "aa_lcr"
+  dataset_folder: "data/AA-LCR/AA-LCR_extracted-text/lcr"  # path to extracted text
+```
+
+If the local data is not found, GLASS will exit early with a clear error message.
 
 ### Build Distribution
 ```bash
@@ -205,7 +239,7 @@ glass/
 ├── datasets/
 │   ├── base.py             # EvaluationSample, ConversationTurn, DatasetAdapter ABC
 │   ├── registry.py         # @register("name") decorator
-│   └── aalcr.py            # AA-LCR adapter (Hugging Face download)
+│   └── aalcr.py            # AA-LCR adapter (local CSV + extracted documents)
 ├── systems/
 │   ├── base.py             # RawOutput (with command field), SystemUnderTest ABC
 │   ├── registry.py

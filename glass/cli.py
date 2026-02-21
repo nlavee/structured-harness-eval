@@ -1,5 +1,10 @@
 import os
 
+from dotenv import load_dotenv
+
+# Load .env file if present (does not override existing env vars)
+load_dotenv(override=False)
+
 import click
 import yaml
 

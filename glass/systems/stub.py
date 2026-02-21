@@ -14,6 +14,7 @@ class StubSystem(SystemUnderTest):
             sample_id=sample.sample_id,
             system_name=self.config.name,
             command=command,
+            prompt=sample.context_prompt,
             output=sample.gold_answer,  # Perfect score
             latency_s=0.1,
             exit_code=0,
