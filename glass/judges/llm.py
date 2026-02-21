@@ -74,11 +74,21 @@ class LLMJudge(Judge):
                 import openai
 
                 client = openai.OpenAI()
-                resp = client.chat.completions.create(
-                    model=self.model,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0,
-                )
+                try:
+                    resp = client.chat.completions.create(
+                        model=self.model,
+                        messages=[{"role": "user", "content": prompt}],
+                        temperature=0,
+                    )
+                except openai.BadRequestError as e:
+                    if "temperature" in str(e):
+                        # Some models (e.g. gpt-5-mini) only support default temperature
+                        resp = client.chat.completions.create(
+                            model=self.model,
+                            messages=[{"role": "user", "content": prompt}],
+                        )
+                    else:
+                        raise
                 return resp.choices[0].message.content or ""
             elif self.provider == "anthropic":
                 import anthropic
