@@ -22,9 +22,9 @@ class AALCRAdapter(DatasetAdapter):
             raise RuntimeError(f"Failed to load AA-LCR dataset: {e}")
 
         for row in ds:
-            # Mapping logic - adjusting based on likely schema
-            # Assuming 'context' or 'text' contains the full context
-            context = row.get("context") or row.get("text") or ""
+            # Mapping logic based on actual schema:
+            # {'Unnamed: 0': 0, 'document_category': 'Academia', 'document_set_id': 'ac_markets', 'question_id': 1, 'question': '...', 'answer': '...', ...}
+            context = row.get("context") or row.get("text") or row.get("question") or ""
 
             # Estimate tokens if not provided
             tokens = row.get("input_tokens")
@@ -32,10 +32,10 @@ class AALCRAdapter(DatasetAdapter):
                 tokens = len(context) // 4
 
             sample = EvaluationSample(
-                sample_id=str(row.get("id", row.get("sample_id", ""))),
-                domain=row.get("domain", "General"),
+                sample_id=str(row.get("question_id", row.get("id", ""))),
+                domain=row.get("document_category", "General"),
                 question=row.get("question", ""),
-                gold_answer=row.get("answer", row.get("gold_answer", "")),
+                gold_answer=row.get("answer", ""),
                 context_prompt=context,
                 input_tokens=int(tokens),
                 metadata=row,

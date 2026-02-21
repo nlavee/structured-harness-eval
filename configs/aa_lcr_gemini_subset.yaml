@@ -10,7 +10,7 @@ dataset:
 systems:
   - name: "gemini-cli"
     type: "gemini"
-    command: ["gemini", "-p"]
+    command: null
     timeout_s: 600
     env: {}
 
