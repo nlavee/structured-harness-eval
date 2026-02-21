@@ -162,10 +162,15 @@ class Pipeline:
                         metric_results["hallucination_rate"] = None
                         judge_outputs["hallucination"] = f"ERROR: {e}"
 
+                judge_model_str = None
+                if hasattr(judge, "provider") and hasattr(judge, "model"):
+                    judge_model_str = f"{judge.provider}/{judge.model}"
+
                 eval_result = EvalResult(
                     sample_id=sample.sample_id,
                     system_name=system.config.name,
                     domain=sample.domain,
+                    judge_model=judge_model_str,
                     metrics=metric_results,
                     judge_outputs=judge_outputs,
                 )

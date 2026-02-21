@@ -26,7 +26,9 @@ def generate_summary(
     df = pd.concat([df.drop("metrics", axis=1), metrics_df], axis=1)
 
     metric_cols = [
-        c for c in df.columns if c not in ["sample_id", "system_name", "domain", "judge_outputs", "human_label"]
+        c
+        for c in df.columns
+        if c not in ["sample_id", "system_name", "domain", "judge_model", "judge_outputs", "human_label"]
     ]
 
     md = ["# GLASS Evaluation Summary\n"]

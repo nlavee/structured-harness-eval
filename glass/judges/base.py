@@ -8,6 +8,7 @@ class EvalResult(BaseModel):
     sample_id: str
     system_name: str
     domain: str
+    judge_model: Optional[str] = None  # "provider/model" used for judging
     metrics: Dict[str, Optional[float]]
     judge_outputs: Dict[str, str]
     human_label: Optional[int] = None
