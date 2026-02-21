@@ -1,0 +1,51 @@
+experiment:
+  name: "runtime_comparison_subset"
+  seed: 42
+
+dataset:
+  name: "aa_lcr"
+  samples: 20             # stratified subset
+  domains: null
+
+systems:
+  - name: "claude-code"
+    type: "claude"
+    command: ["claude", "--print", "--output-format", "text"]
+    timeout_s: 600
+    env: {}
+
+  - name: "structured_harness_claude"
+    type: "structured_harness"
+    model: "sonnet"
+    harness_config: "single_turn_qa"
+    timeout_s: 600
+    env: {}
+
+metrics:
+  - exact_match
+  - soft_recall
+  - judge_score
+  - hallucination_rate
+  - latency_s
+  - verbosity
+  - refusal_rate
+  - error_rate
+
+judges:
+  strategy: "fixed"
+  fixed:
+    provider: "openai"
+    model: "gpt-4.1"
+  templates:
+    correctness: "aa_lcr_equality"
+    hallucination: "nli_sentence"
+
+statistics:
+  bootstrap_resamples: 1000
+  alpha: 0.05
+  primary_test: "wilcoxon_one_tailed"
+  secondary_test: "wilcoxon_two_tailed"
+
+output:
+  runs_dir: "./runs"
+  log_level: "INFO"

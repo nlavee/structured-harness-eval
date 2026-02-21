@@ -1,0 +1,87 @@
+experiment:
+  name: "runtime_comparison_v1"
+  run_id: null
+  seed: 42
+
+dataset:
+  name: "aa_lcr"
+  samples: null
+  domains: null
+
+systems:
+  - name: "claude-code"
+    type: "claude"
+    command: ["claude", "--print", "--output-format", "text"]
+    timeout_s: 600
+    env: {}
+
+  - name: "gemini-cli"
+    type: "gemini"
+    command: ["gemini", "-p"]
+    timeout_s: 600
+    env: {}
+
+  - name: "codex-cli"
+    type: "codex"
+    command: ["codex", "exec", "--model", "gpt-5", "--ask-for-approval", "never"]
+    timeout_s: 600
+    env: {}
+
+  - name: "structured_harness_claude"
+    type: "structured_harness"
+    model: "sonnet"
+    harness_config: "single_turn_qa"
+    timeout_s: 600
+    env: {}
+
+  - name: "structured_harness_gemini"
+    type: "structured_harness"
+    model: "gemini-2.0-flash"
+    harness_config: "single_turn_qa"
+    timeout_s: 600
+    env: {}
+
+  - name: "structured_harness_gpt"
+    type: "structured_harness"
+    model: "gpt-4.1"
+    harness_config: "single_turn_qa"
+    timeout_s: 600
+    env: {}
+
+metrics:
+  - exact_match
+  - soft_recall
+  - judge_score
+  - hallucination_rate
+  - latency_s
+  - verbosity
+  - refusal_rate
+  - error_rate
+
+judges:
+  strategy: "rotation"
+  
+  rotation:
+    anthropic:
+      provider: "google"
+      model: "gemini-2.0-flash"
+    google:
+      provider: "anthropic"
+      model: "claude-opus-4-6"
+    openai:
+      provider: "anthropic"
+      model: "claude-opus-4-6"
+
+  templates:
+    correctness: "aa_lcr_equality"
+    hallucination: "nli_sentence"
+
+statistics:
+  bootstrap_resamples: 10000
+  alpha: 0.05
+  primary_test: "wilcoxon_one_tailed"
+  secondary_test: "wilcoxon_two_tailed"
+
+output:
+  runs_dir: "./runs"
+  log_level: "INFO"

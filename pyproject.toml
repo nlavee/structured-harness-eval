@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "glass"
+version = "0.1.0"
+description = "Global Long-context Agent Scoring System"
+authors = [
+    {name = "Vu, N.", email = "anhvu.nguyenlam@gmail.com"},
+]
+dependencies = [
+    "pydantic>=2.0",
+    "pyyaml",
+    "pandas",
+    "numpy",
+    "scipy",
+    "datasets",
+    "nltk",
+    "click",
+    "rich",
+    "anthropic",
+    "google-generativeai",
+    "openai",
+    "tabulate"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff"
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []
+
+[tool.setuptools.packages.find]
+include = ["glass*"]

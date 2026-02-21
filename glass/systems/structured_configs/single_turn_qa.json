@@ -1,0 +1,8 @@
+{
+  "codons": [
+    {
+      "name": "answer_question",
+      "prompt": "{{input}}"
+    }
+  ]
+}
