@@ -1,8 +1,11 @@
 import json
+import logging
 from pathlib import Path
 
 from glass.judges.base import EvalResult
 from glass.systems.base import RawOutput
+
+logger = logging.getLogger(__name__)
 
 
 class RunStore:
@@ -22,7 +25,7 @@ class RunStore:
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(output.model_dump_json(indent=2))
 
-        print(f"[GLASS] Saved raw output → {file_path}")
+        logger.debug("Saved raw output → %s", file_path)
 
     def load_raw_output(self, system_name: str, sample_id: str) -> RawOutput:
         file_path = self.inference_dir / system_name / f"sample_{sample_id}.json"
