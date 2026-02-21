@@ -207,8 +207,10 @@ def plot_distributions(results_df: pd.DataFrame, run_dir: Path, systems: List[st
             data=results_df,
             x="system_name",
             y=metric,
+            hue="system_name",
             ax=ax,
-            palette="pastel"
+            palette="pastel",
+            legend=False
         )
         # Add stripplot to show individual data points
         sns.stripplot(
