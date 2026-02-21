@@ -11,6 +11,7 @@ dataset:
 systems:
   - name: "gemini-cli"
     type: "gemini"
+    model: "gemini-3.0-flash"
     command: null
     timeout_s: 600
     env: {}

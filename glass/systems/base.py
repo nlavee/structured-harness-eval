@@ -13,6 +13,7 @@ from glass.datasets.base import EvaluationSample
 class RawOutput(BaseModel):
     sample_id: str
     system_name: str
+    model: Optional[str] = None  # Model used for inference (logged for reproducibility)
     command: List[str]  # AP-8: exact command invoked (required for reproducibility)
     prompt: str  # Full prompt sent via stdin for debugging/reproducibility
     output: str
@@ -36,6 +37,7 @@ class SystemUnderTest(ABC):
         """Helper to run a subprocess with the given command and prompt."""
         start_time = time.time()
         timestamp = datetime.datetime.now().isoformat()
+        model = self.config.model
 
         try:
             # AP-5: Use list of arguments (command)
@@ -63,6 +65,7 @@ class SystemUnderTest(ABC):
             return RawOutput(
                 sample_id=sample_id,
                 system_name=self.config.name,
+                model=model,
                 command=command,
                 prompt=prompt,
                 output=stdout,
@@ -79,6 +82,7 @@ class SystemUnderTest(ABC):
             return RawOutput(
                 sample_id=sample_id,
                 system_name=self.config.name,
+                model=model,
                 command=command,
                 prompt=prompt,
                 output="",
@@ -93,6 +97,7 @@ class SystemUnderTest(ABC):
             return RawOutput(
                 sample_id=sample_id,
                 system_name=self.config.name,
+                model=model,
                 command=command,
                 prompt=prompt,
                 output="",

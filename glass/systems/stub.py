@@ -13,6 +13,7 @@ class StubSystem(SystemUnderTest):
         return RawOutput(
             sample_id=sample.sample_id,
             system_name=self.config.name,
+            model=self.config.model,
             command=command,
             prompt=sample.context_prompt,
             output=sample.gold_answer,  # Perfect score
