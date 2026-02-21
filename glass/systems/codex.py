@@ -11,4 +11,13 @@ class CodexSystem(SystemUnderTest):
         else:
             model = self.config.model or "gpt-5"
             command = ["codex", "exec", "--model", model, "--ask-for-approval", "never"]
-        return self._run_command(command, sample.context_prompt, sample.sample_id)
+            if self.config.quiet:
+                command.append("--quiet")
+            command.append("-")  # read prompt from stdin
+        result = self._run_command(command, sample.context_prompt, sample.sample_id)
+
+        # When not quiet, stderr may contain CoT/reasoning
+        if not self.config.quiet and result.stderr and not result.error_type:
+            result.chain_of_thought = result.stderr
+
+        return result

@@ -12,19 +12,19 @@ dataset:
 systems:
   - name: "claude-code"
     type: "claude"
-    command: ["claude", "--print", "--output-format", "text"]
+    model: "claude-sonnet-4-6"
     timeout_s: 600
     env: {}
 
   - name: "gemini-cli"
     type: "gemini"
-    command: ["gemini", "-p"]
+    model: "gemini-2.5-flash"
     timeout_s: 600
     env: {}
 
   - name: "codex-cli"
     type: "codex"
-    command: ["codex", "exec", "--model", "gpt-5", "--ask-for-approval", "never"]
+    model: "gpt-5"
     timeout_s: 600
     env: {}
 
@@ -37,7 +37,7 @@ systems:
 
   - name: "structured_harness_gemini"
     type: "structured_harness"
-    model: "gemini-2.0-flash"
+    model: "gemini-2.5-flash"
     harness_config: "single_turn_qa"
     timeout_s: 600
     env: {}
@@ -65,7 +65,7 @@ judges:
   rotation:
     anthropic:
       provider: "google"
-      model: "gemini-2.0-flash"
+      model: "gemini-2.5-flash"
     google:
       provider: "anthropic"
       model: "claude-opus-4-6"

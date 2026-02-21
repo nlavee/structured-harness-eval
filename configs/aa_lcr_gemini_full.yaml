@@ -1,32 +1,24 @@
 experiment:
-  name: "runtime_comparison_subset"
+  name: "gemini_cli_full_test"
   seed: 42
 
 dataset:
   name: "aa_lcr"
   dataset_folder: "data/AA-LCR/AA-LCR_extracted-text/lcr"
-  samples: 20             # stratified subset
+  samples: null
   domains: null
 
 systems:
-  - name: "claude-code"
-    type: "claude"
-    model: "claude-sonnet-4-6"
-    timeout_s: 600
-    env: {}
-
-  - name: "structured_harness_claude"
-    type: "structured_harness"
-    model: "sonnet"
-    harness_config: "single_turn_qa"
+  - name: "gemini-cli"
+    type: "gemini"
+    model: "gemini-2.5-flash"
+    command: null
     timeout_s: 600
     env: {}
 
 metrics:
   - exact_match
   - soft_recall
-  - judge_score
-  - hallucination_rate
   - latency_s
   - verbosity
   - refusal_rate
@@ -42,7 +34,7 @@ judges:
     hallucination: "nli_sentence"
 
 statistics:
-  bootstrap_resamples: 1000
+  bootstrap_resamples: 100
   alpha: 0.05
   primary_test: "wilcoxon_one_tailed"
   secondary_test: "wilcoxon_two_tailed"

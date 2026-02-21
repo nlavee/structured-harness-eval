@@ -128,6 +128,12 @@ class Pipeline:
                 judge_outputs = {}
 
                 if raw_output.error_type:
+                    logger.warning(
+                        "Skipping Judge evaluation for %s/%s because SUT inference failed with error_type='%s'. metric error_rate evaluates to 1.0.",
+                        system.config.name,
+                        sample.sample_id,
+                        raw_output.error_type
+                    )
                     # AP-15: undefined, not 0.0
                     metric_results["judge_score"] = None
                     metric_results["hallucination_rate"] = None
@@ -175,7 +181,10 @@ class Pipeline:
                     judge_outputs=judge_outputs,
                 )
                 self.store.save_eval_result(eval_result)
-                print(f"[GLASS] Evaluated {system.config.name} sample {sample.sample_id}")
+                if raw_output.error_type:
+                    print(f"[GLASS] Skipped Judge for {system.config.name} sample {sample.sample_id} due to prior inference error")
+                else:
+                    print(f"[GLASS] Evaluated {system.config.name} sample {sample.sample_id}")
 
         # Phase 3: Statistics (AP-4: computed on complete result set, never inline)
         print("\n[GLASS] Starting Phase 3: Statistics")

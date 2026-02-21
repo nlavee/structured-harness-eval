@@ -61,6 +61,21 @@ def test_gemini_command_in_output(mock_popen, sample):
     assert output.command == ["gemini", "--output-format", "text"]
 
 
+@patch("glass.systems.base.subprocess.Popen")
+def test_gemini_cot_capture(mock_popen, sample):
+    """When quiet=False, stderr is captured as chain_of_thought."""
+    proc = MagicMock()
+    proc.communicate.return_value = (b"answer", b"thinking about it...")
+    proc.returncode = 0
+    mock_popen.return_value = proc
+
+    config = SystemConfig(name="gemini-cli", type="gemini", quiet=False)
+    sys = GeminiSystem(config)
+    output = sys.generate(sample)
+
+    assert output.chain_of_thought == "thinking about it..."
+
+
 # --------------------------------------------------------------------------- #
 # Codex system                                                                #
 # --------------------------------------------------------------------------- #
@@ -98,6 +113,74 @@ def test_codex_default_model(mock_popen, sample):
     args, _ = mock_popen.call_args
     cmd = args[0]
     assert "gpt-5" in cmd  # fallback default
+
+
+@patch("glass.systems.base.subprocess.Popen")
+def test_codex_stdin_flag(mock_popen, sample):
+    """Codex must end command with '-' to read from stdin."""
+    proc = MagicMock()
+    proc.communicate.return_value = (b"out", b"")
+    proc.returncode = 0
+    mock_popen.return_value = proc
+
+    config = SystemConfig(name="codex-cli", type="codex")
+    sys = CodexSystem(config)
+    sys.generate(sample)
+
+    args, _ = mock_popen.call_args
+    cmd = args[0]
+    assert cmd[-1] == "-"
+
+
+@patch("glass.systems.base.subprocess.Popen")
+def test_codex_quiet_mode(mock_popen, sample):
+    """When quiet=True, --quiet flag should be present."""
+    proc = MagicMock()
+    proc.communicate.return_value = (b"out", b"")
+    proc.returncode = 0
+    mock_popen.return_value = proc
+
+    config = SystemConfig(name="codex-cli", type="codex", quiet=True)
+    sys = CodexSystem(config)
+    sys.generate(sample)
+
+    args, _ = mock_popen.call_args
+    cmd = args[0]
+    assert "--quiet" in cmd
+    assert cmd[-1] == "-"  # stdin flag still last
+
+
+@patch("glass.systems.base.subprocess.Popen")
+def test_codex_no_quiet_by_default(mock_popen, sample):
+    """Default (quiet=False) should not include --quiet."""
+    proc = MagicMock()
+    proc.communicate.return_value = (b"out", b"")
+    proc.returncode = 0
+    mock_popen.return_value = proc
+
+    config = SystemConfig(name="codex-cli", type="codex")
+    sys = CodexSystem(config)
+    sys.generate(sample)
+
+    args, _ = mock_popen.call_args
+    cmd = args[0]
+    assert "--quiet" not in cmd
+
+
+@patch("glass.systems.base.subprocess.Popen")
+def test_codex_cot_capture(mock_popen, sample):
+    """When quiet=False, stderr is captured as chain_of_thought."""
+    proc = MagicMock()
+    proc.communicate.return_value = (b"final answer", b"reasoning step 1\nreasoning step 2")
+    proc.returncode = 0
+    mock_popen.return_value = proc
+
+    config = SystemConfig(name="codex-cli", type="codex", quiet=False)
+    sys = CodexSystem(config)
+    output = sys.generate(sample)
+
+    assert output.chain_of_thought == "reasoning step 1\nreasoning step 2"
+    assert output.output == "final answer"
 
 
 # --------------------------------------------------------------------------- #
@@ -141,7 +224,7 @@ def test_non_utf8_stdout_handled(mock_popen, sample):
 
     from glass.systems.claude import ClaudeSystem
 
-    config = SystemConfig(name="claude-code", type="claude")
+    config = SystemConfig(name="claude-code", type="claude", quiet=True)
     sys = ClaudeSystem(config)
     output = sys.generate(sample)
 

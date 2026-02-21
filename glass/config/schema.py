@@ -22,6 +22,7 @@ class SystemConfig(BaseModel):
     command: Optional[List[str]] = None
     model: Optional[str] = None
     harness_config: Optional[str] = None
+    quiet: bool = False  # When True, suppress CoT/reasoning output
     timeout_s: int = 600
     env: Dict[str, str] = Field(default_factory=dict)
 

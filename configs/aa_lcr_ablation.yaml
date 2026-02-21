@@ -19,7 +19,7 @@ systems:
 
   - name: "structured_harness_gemini"
     type: "structured_harness"
-    model: "gemini-2.0-flash"
+    model: "gemini-2.5-flash"
     harness_config: "single_turn_qa"
     timeout_s: 600
     env: {}
@@ -45,7 +45,7 @@ judges:
   strategy: "fixed"
   fixed:
     provider: "openai"
-    model: "gpt-4.1"
+    model: "gpt-4o-mini-2024-07-18"
   templates:
     correctness: "aa_lcr_equality"
     hallucination: "nli_sentence"

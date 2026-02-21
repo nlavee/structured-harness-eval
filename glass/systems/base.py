@@ -17,6 +17,7 @@ class RawOutput(BaseModel):
     command: List[str]  # AP-8: exact command invoked (required for reproducibility)
     prompt: str  # Full prompt sent via stdin for debugging/reproducibility
     output: str
+    chain_of_thought: Optional[str] = None  # CoT/reasoning captured when quiet=False
     latency_s: float
     exit_code: int
     stderr: str
