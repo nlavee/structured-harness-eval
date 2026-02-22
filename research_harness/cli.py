@@ -118,6 +118,15 @@ def main():
         else:
             console.print("[yellow]Step 3: LLM Qualitative Synthesis [SKIPPED][/yellow]")
             
+        # 4. Run Vision Interpreter
+        if not args.skip_synthesis:
+            task4 = progress.add_task(f"[cyan]Step 4/4: Vision Interpretation ({args.provider}/{args.model})...", total=None)
+            vision_cmd = ["python", str(harness_dir / "vision_interpreter.py"), "--figures-dir", str(out_dir / "figures"), "--provider", args.provider, "--model", args.model, "--out-dir", str(out_dir)]
+            subprocess.run(vision_cmd, check=True, capture_output=True)
+            progress.update(task4, completed=100, description="[bold green]Step 4/4 Complete: Vision Interpretation")
+        else:
+            console.print("[yellow]Step 4: Vision Interpretation [SKIPPED][/yellow]")
+            
     console.print(f"\n[bold green]✨ Research Harness pipeline complete.[/bold green] Check [bold cyan]{out_dir}/[/bold cyan] for artifacts.")
 
 if __name__ == "__main__":
