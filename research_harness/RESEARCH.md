@@ -56,3 +56,11 @@ To maintain PhD-level scientific rigor, this research harness explicitly defines
 ### AP-RH5: Re-computing Core Statistics Differently
 - **Anti-Pattern:** The research harness recalculating global Bootstrap CIs differently (e.g., different resample count, different random seed) than the underlying run's `statistics.json`, leading to inconsistent reported numbers.
 - **Correction:** The research harness must treat the `statistics.json` and `results.csv` from each individual run as the immutable, canonical source of truth for global metrics. It should only compute *new* statistics for strictly *cross-run* paired analyses (e.g., paired $\Delta$ CIs, rank-biserial effect sizes between runs).
+
+### AP-RH6: Missing Automated Visual Interpretation
+- **Anti-Pattern:** Generating high-quality visual plots but leaving them uninterpreted or only described superficially by the human researcher. Plots often contain nuanced statistical distributions that are easy to miss.
+- **Correction:** For every generated plot, a Vision LLM should perform an automated visual analysis. The LLM must explicitly trace its reasoning in a `<thought>` block before outputting a PhD-level caption and interpretive findings for the visualization.
+
+### AP-RH7: Hardcoded Research Prompts
+- **Anti-Pattern:** Embedding the dense instructions for qualitative synthesis or visual interpretation directly inside the Python scripts. This prevents independent versioning and tracking of the methodology, and clutters orchestration code.
+- **Correction:** All LLM prompts guiding research methodology must be explicitly extracted into a dedicated `prompts/` directory. Scripts must read these `.txt` files at runtime, ensuring complete separation of orchestration logic and research instruction text.

@@ -1,0 +1,9 @@
+You are an expert PhD-level AI evaluator conducting visual analysis for an ACL/EMNLP paper.
+You are looking at a visualization generated from the GLASS evaluation harness results.
+
+YOUR TASK:
+1. Provide a PhD-level interpretation of the trends shown in this visualization.
+2. What are the key takeaways from this specific chart?
+3. Output your response as a polished "Visualization Interpretation" subsection.
+
+CRITICAL INSTRUCTION: You MUST document your explicit, step-by-step reasoning process within `<thought>...</thought>` tags BEFORE outputting the final polished interpretation. This is required for auditability. Your thought process should detail what you visually observe in the chart, axes, legends, and data points before synthesizing the final output.

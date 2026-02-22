@@ -103,6 +103,7 @@ def plot_paired_violin(df: pd.DataFrame, systems: List[str], metrics: List[str],
         return
 
     g = sns.catplot(data=melted_df, x="System", y="Score", col="Metric", 
+                    hue="System", legend=False,
                     kind="violin", inner=None, palette="muted", 
                     sharey=False, height=5, aspect=0.8)
     
@@ -217,6 +218,71 @@ def plot_domain_heatmap(domain_stats: Dict, systems: List[str], metric: str, out
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
+def plot_paired_difference(df: pd.DataFrame, systems: List[str], metrics: List[str], out_path: Path):
+    """
+    AP-RH2: Paired Sample Difference (Waterfall / Scatter).
+    Calculates the delta (System A - System B) per sample and plots the distribution of deltas.
+    Useful for seeing if a system fixes failures or just fails on different samples.
+    """
+    logger.info(f"Generating Paired Difference Plot for {metrics} between '{systems[0]}' and '{systems[1]}'")
+    
+    if len(systems) < 2:
+        logger.warning("Need at least 2 systems for paired difference plot.")
+        return
+        
+    # We compare the first two systems in the list (typically structured harness vs baseline)
+    sys_a = systems[0]
+    sys_b = systems[1]
+    
+    # Restructure data for sns distribution plots
+    delta_data = []
+    
+    for metric in metrics:
+        col_a = f"{sys_a}_{metric}"
+        col_b = f"{sys_b}_{metric}"
+        
+        if col_a in df.columns and col_b in df.columns:
+            # Dropna for the pair
+            valid_pairs = df[[col_a, col_b, 'sample_id']].dropna()
+            for _, row in valid_pairs.iterrows():
+                try:
+                    val_a = float(row[col_a])
+                    val_b = float(row[col_b])
+                    delta = val_a - val_b
+                    
+                    delta_data.append({
+                        "Metric": metric,
+                        "Delta": delta,
+                        "sample_id": row['sample_id']
+                    })
+                except (ValueError, TypeError):
+                    continue
+                    
+    delta_df = pd.DataFrame(delta_data)
+    if delta_df.empty:
+        logger.warning("No valid numeric pairs found for difference plotting.")
+        return
+        
+    plt.figure(figsize=(10, 6))
+    
+    # We use a stripplot combined with a boxplot to show the distribution of deltas
+    sns.boxplot(data=delta_df, x="Metric", y="Delta", color="lightgray", showfliers=False)
+    sns.stripplot(data=delta_df, x="Metric", y="Delta", alpha=0.6, jitter=True)
+    
+    # Add a zero line
+    plt.axhline(0, color='red', linestyle='--', linewidth=2, label="No Difference")
+    
+    plt.title(f"Paired Difference: {sys_a} (A) - {sys_b} (B)")
+    plt.ylabel(r"$\Delta$ (A - B)")
+    plt.xlabel("Metric")
+    plt.legend()
+    
+    enforce_ap_rh2_metadata(plt.gca(), len(delta_df) // len(metrics) if len(metrics) > 0 else 0)
+    
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
 def main():
     parser = argparse.ArgumentParser(description="Research Harness Visualizer enforcing AP-RH2.")
     parser.add_argument("--data", required=True, help="Path to aggregated_data.json")
@@ -246,9 +312,14 @@ def main():
     plot_forest_cis(global_stats, systems, "judge_score", out_dir / "forest_judge_score.png", sample_size)
     plot_forest_cis(global_stats, systems, "hallucination_rate", out_dir / "forest_hallucination_rate.png", sample_size)
     
-    # Violin Plots for Continouos Metrics
+    # Continuous metrics
     continuous_metrics = ["hallucination_rate", "soft_recall", "latency_s"]
     plot_paired_violin(df, systems, continuous_metrics, out_dir / "violin_distributions.png")
+    
+    # AP-RH2 Paired Differences
+    if len(systems) >= 2:
+        diff_metrics = ["judge_score", "hallucination_rate", "soft_recall"]
+        plot_paired_difference(df, systems[:2], diff_metrics, out_dir / "paired_differences.png")
     
     # Behavioral Radar Chart
     plot_behavior_radar(global_stats, systems, out_dir / "radar_behavior.png", sample_size)
