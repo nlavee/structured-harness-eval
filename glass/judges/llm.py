@@ -55,7 +55,7 @@ class LLMJudge(Judge):
 
         sentences = [s for s in sentences if s.strip()]
         if not sentences:
-            return 0.0, "[]"
+            return None, "[]"
 
         results = []
         for sent in sentences:

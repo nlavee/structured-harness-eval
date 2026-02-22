@@ -64,6 +64,7 @@ def test_pipeline_flow(mock_strat, mock_metric_cls, mock_sys_cls, mock_ds_cls, m
     mock_metric.compute.return_value = 1.0
     mock_metric_cls.return_value = MagicMock(return_value=mock_metric)
 
+
     # Mock Judge
     mock_judge = MagicMock()
     mock_judge.evaluate_correctness.return_value = (1.0, "ok")
@@ -76,5 +77,8 @@ def test_pipeline_flow(mock_strat, mock_metric_cls, mock_sys_cls, mock_ds_cls, m
     # Verify Inference
     mock_sys.generate.assert_called_once()
 
-    # Verify Eval
-    mock_judge.evaluate_correctness.assert_called_once()
+    # Verify Eval (Metrics now receive the judge)
+    mock_metric.compute.assert_called_once()
+    _, kwargs = mock_metric.compute.call_args
+    assert kwargs["judge"] == mock_judge
+    assert "judge_outputs" in kwargs

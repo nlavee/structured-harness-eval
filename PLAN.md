@@ -331,11 +331,12 @@ For the `fixed` strategy, a single judge (default: `gpt-4.1`) is used for all SU
 
 | Metric | Category | Method |
 |---|---|---|
-| `exact_match` | Correctness | String normalization + equality |
-| `soft_recall` | Correctness | Token-level F1 overlap. **Implementation:** Normalize string (lower, strip punctuation) -> split by whitespace -> compute F1. Do not use model-specific tokenizers. |
+| `exact_match` | Correctness | Exact string match after basic lowercasing and punctuation stripping. |
+| `soft_recall` | Correctness | Token-level overlap (Recall) between stripped output and gold strings. |
+| `soft_f1` | Correctness | Token-level overlap (F1) between stripped output and gold strings. |
 | `judge_score` | Correctness | EqualityJudge → 0/1 (CORRECT / INCORRECT) |
 | `hallucination_rate` | Correctness | HallucinationJudge. **Implementation:** Use `nltk.sent_tokenize` to split response into sentences. Judge each sentence. Score = `(Contradicted + Unverified) / Total sentences`. |
-| `latency_s` | Behavior | Wall-clock subprocess duration (includes CLI startup) |
+| `latency_s` | Operational | Extracted directly from `RawOutput`. |
 | `verbosity` | Behavior | `len(prediction) / len(gold_answer)` |
 | `refusal_rate` | Behavior | Regex: "I cannot answer", "I don't have access", etc. |
 | `error_rate` | Reliability | `exit_code != 0` or `error_type is not None` |

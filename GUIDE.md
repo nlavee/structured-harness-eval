@@ -264,6 +264,7 @@ glass/
 │   ├── registry.py
 │   ├── exact_match.py      # Normalised string equality (AP-14)
 │   ├── soft_recall.py      # Token-level recall (whitespace tokenisation)
+│   ├── soft_f1.py          # Token-level F1 score
 │   ├── latency.py          # Wall-clock subprocess time (AP-9)
 │   ├── verbosity.py        # len(prediction) / len(gold_answer)
 │   ├── refusal.py          # Regex-based refusal detection
@@ -312,20 +313,24 @@ class MyDatasetAdapter(DatasetAdapter):
 ```
 Then add `"my_dataset"` to `dataset.name` in config. No other changes needed.
 
-### New Metric
-```python
-# glass/metrics/my_metric.py
-from glass.metrics.base import BaseMetric
-from glass.metrics.registry import register
+### Adding a New Metric
+1. Create `glass/metrics/my_metric.py`
+2. Subclass `BaseMetric` and use `@register`:
+   ```python
+   from glass.metrics.registry import register
+   from glass.metrics.base import BaseMetric
+   from glass.systems.base import RawOutput
+   from glass.datasets.base import EvaluationSample
 
-@register("my_metric")
-class MyMetric(BaseMetric):
-    def compute(self, output, sample) -> float | None:
-        if output.error_type:
-            return None  # AP-3: never return 0.0 for errors
-        ...
-```
-Add `"my_metric"` to `metrics:` in config. Import it in `cli.py`. No orchestrator changes.
+   @register("my_metric")
+   class MyMetric(BaseMetric):
+       def compute(self, output: RawOutput, sample: EvaluationSample, **kwargs) -> float:
+           if output.error_type:
+               return None
+           return len(output.output)
+   ```
+3. The metric will be automatically discovered because `glass/metrics/__init__.py` auto-imports all metrics in the directory.
+4. Add it to your config's `metrics` list. No orchestrator changes needed.
 
 ### New System
 ```python
