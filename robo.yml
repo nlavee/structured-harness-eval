@@ -1,6 +1,3 @@
-
-summary: Task runner for GLASS evaluation and research harness
-
 eval:run:
   summary: Execute evaluation runs using the GLASS pipeline.
   usage: robo eval:run <config-path> [flags]

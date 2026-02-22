@@ -149,17 +149,23 @@ glass run configs/aa_lcr_full.yaml --resume 20260221_120000_runtime_comparison_v
 ```
 
 ### Task Runner (Alternative)
-You can also use the `robo` task runner for simplified command execution:
+You can also use the `robo` task runner for simplified command execution.
 
+**Install Robo:**
+```bash
+curl -sfL https://github.com/tj/robo/releases/download/v0.5.4/robo_linux_amd64 -o bin/robo && chmod +x bin/robo
+```
+
+**Usage:**
 ```bash
 # Run evaluation
-robo eval:run configs/aa_lcr_subset.yaml
+bin/robo eval:run configs/aa_lcr_subset.yaml
 
 # Launch research harness
-robo research:harness --runs <run_id_1> <run_id_2>
+bin/robo research:harness --runs <run_id_1> <run_id_2>
 
 # View all tasks
-robo help
+bin/robo help
 ```
 
 ---

@@ -44,19 +44,28 @@ python3 research_harness/cli.py --runs <run_id_1> <run_id_2> --provider openai -
 
 GLASS includes a `robo` task runner to simplify common operations.
 
+**Install Robo:**
+```bash
+# Install to ./bin
+curl -sfL https://github.com/tj/robo/releases/download/v0.5.4/robo_linux_amd64 -o bin/robo && chmod +x bin/robo
+
+# Add to PATH (optional)
+export PATH=$PATH:$(pwd)/bin
+```
+
 **Run an evaluation:**
 ```bash
-robo eval:run configs/aa_lcr_full.yaml
+bin/robo eval:run configs/aa_lcr_full.yaml
 ```
 
 **Launch the research harness:**
 ```bash
-robo research:harness --runs <run_id_1> <run_id_2>
+bin/robo research:harness --runs <run_id_1> <run_id_2>
 ```
 
 **View all available tasks:**
 ```bash
-robo help
+bin/robo help
 ```
 
 ---
