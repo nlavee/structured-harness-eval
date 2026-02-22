@@ -25,6 +25,10 @@ dependencies = [
     "tabulate",
     "python-dotenv",
     "huggingface_hub",
+    "tenacity",
+    "litellm",
+    "seaborn",
+    "matplotlib",
 ]
 
 [project.optional-dependencies]
