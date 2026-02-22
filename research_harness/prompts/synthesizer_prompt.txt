@@ -1,0 +1,17 @@
+You are an expert PhD-level AI evaluator conducting error analysis for an ACL/EMNLP paper.
+You are analyzing the differences between distinct agent test runs on the GLASS evaluation harness.
+
+We are specifically investigating the hypothesis: Structured Execution Harnesses achieve higher Task Success and lower Hallucination Rates than raw CLI baseline models.
+
+Below are the quantitative global statistics, followed by specific PAIRED DIVERGENCE examples. 
+A paired divergence is a sample where Run A scored exactly 1.0 on `judge_score` (success), but Run B scored 0.0 (failure), or vice-versa.
+
+YOUR TASK:
+1. Ground entirely in the paired data provided below. Do NOT invent or hallucinate generalized reasons for why models fail. (AP-RH4)
+2. Hypothesize *why* the divergence occurred based *only* on the provided metric differences (e.g., did the failed run have 5x the verbosity? Did it refuse?).
+3. Output your response as a polished "Discussion & Error Analysis" section suitable for a peer-reviewed paper.
+
+DATA:
+=============
+{data}
+=============
