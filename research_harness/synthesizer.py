@@ -13,8 +13,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%
 logger = logging.getLogger("Synthesizer")
 
 import litellm
+import sys
 
-import litellm
+# Add current directory to path so we can import schema
+sys.path.append(str(Path(__file__).parent))
+from schema import AggregatedData
 
 
 
@@ -35,6 +38,30 @@ def generate_prompt_context(payload: dict) -> str:
                 ci_high = m_stats.get("ci_high", 0)
                 context.append(f"  - {metric}: {mean:.2f} (95% CI: [{ci_low:.2f}, {ci_high:.2f}])")
                 
+    context.append("\nDOMAIN STATISTICS (Per-System Breakdown):")
+    domain_stats = payload.get("domain_statistics", {})
+    if domain_stats:
+        all_domains = set()
+        for sys_stats in domain_stats.values():
+            all_domains.update(sys_stats.keys())
+            
+        for domain in sorted(list(all_domains)):
+            context.append(f"\n  Domain: {domain}")
+            for sys in payload['metadata']['systems']:
+                dstats = domain_stats.get(sys, {}).get(domain, {})
+                js = dstats.get("judge_score", {}).get("mean", "N/A")
+                em = dstats.get("exact_match", {}).get("mean", "N/A")
+                sr = dstats.get("soft_recall", {}).get("mean", "N/A")
+                hr = dstats.get("hallucination_rate", {}).get("mean", "N/A")
+                if js != "N/A":
+                    # Format numbers nicely if they aren't N/A
+                    em_str = f"{em:.2f}" if isinstance(em, float) else em
+                    sr_str = f"{sr:.2f}" if isinstance(sr, float) else sr
+                    hr_str = f"{hr:.2f}" if isinstance(hr, float) else hr
+                    context.append(f"    - {sys}: Judge Score: {js:.2f}, Exact Match: {em_str}, Soft Recall: {sr_str}, Hallucination: {hr_str}")
+    else:
+        context.append("  No domain statistics available.")
+        
     context.append("\nPAIRED DIVERGENCES (Judge Score = 1.0 vs 0.0):")
     divergences = payload.get("divergence_pairs_ap_rh4", [])
     
@@ -65,7 +92,14 @@ def main():
     log_dir.mkdir(parents=True, exist_ok=True)
     
     with open(args.data, "r") as f:
-        payload = json.load(f)
+        raw_json = f.read()
+        
+    try:
+        validated_payload = AggregatedData.model_validate_json(raw_json)
+        payload = validated_payload.model_dump()
+    except Exception as e:
+        logger.error(f"FATAL: The incoming aggregated data failed Pydantic schema validation: {e}")
+        sys.exit(1)
         
     context_str = generate_prompt_context(payload)
     

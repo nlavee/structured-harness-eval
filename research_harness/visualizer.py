@@ -6,7 +6,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-from typing import Dict, List, Tuple
+from typing import Dict, List
+import sys
+
+# Add current directory to path so we can import schema
+sys.path.append(str(Path(__file__).parent))
+from schema import AggregatedData
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(name)s] %(message)s')
 logger = logging.getLogger("Visualizer")
@@ -167,6 +172,51 @@ def plot_behavior_radar(global_stats: Dict, systems: List[str], out_path: Path, 
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
+def plot_domain_heatmap(domain_stats: Dict, systems: List[str], metric: str, out_path: Path):
+    """
+    Plots a heatmap for a specific metric across different domains and systems.
+    """
+    logger.info(f"Generating Domain Heatmap for {metric}")
+    
+    # Collect all unique domains
+    domains = set()
+    for sys_stats in domain_stats.values():
+        domains.update(sys_stats.keys())
+    domains = sorted(list(domains))
+    
+    if not domains:
+        logger.warning(f"No domains found for heatmap {metric}")
+        return
+
+    data = []
+    for domain in domains:
+        row = []
+        for sys in systems:
+            val = domain_stats.get(sys, {}).get(domain, {}).get(metric, {}).get("mean", np.nan)
+            row.append(val)
+        data.append(row)
+        
+    df = pd.DataFrame(data, index=domains, columns=systems)
+    
+    # Drop rows that are entirely NaN
+    df = df.dropna(how='all')
+    if df.empty:
+        logger.warning(f"No valid data found for heatmap {metric}")
+        return
+        
+    plt.figure(figsize=(10, len(df) * 0.8 + 2))
+    cmap = "Blues" if metric in ["judge_score", "exact_match", "soft_recall"] else "Reds"
+    
+    sns.heatmap(df, annot=True, cmap=cmap, fmt=".2f", cbar_kws={'label': f'{metric} (Mean)'})
+    plt.title(f"Domain Breakdown: {metric}")
+    plt.ylabel("Domain")
+    plt.xlabel("System / Run")
+    plt.xticks(rotation=45, ha='right')
+    
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
 def main():
     parser = argparse.ArgumentParser(description="Research Harness Visualizer enforcing AP-RH2.")
     parser.add_argument("--data", required=True, help="Path to aggregated_data.json")
@@ -177,11 +227,19 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     
     with open(args.data, "r") as f:
-        payload = json.load(f)
+        raw_json = f.read()
+        
+    try:
+        validated_payload = AggregatedData.model_validate_json(raw_json)
+        payload = validated_payload.model_dump()
+    except Exception as e:
+        logger.error(f"FATAL: The incoming aggregated data failed Pydantic schema validation: {e}")
+        sys.exit(1)
         
     systems = payload["metadata"]["systems"]
     sample_size = payload["metadata"]["paired_sample_n"]
     global_stats = payload["global_statistics"]
+    domain_stats = payload.get("domain_statistics", {})
     df = pd.DataFrame(payload["joined_dataframe"])
     
     # Forest Plots for Primary Metrics
@@ -195,6 +253,12 @@ def main():
     # Behavioral Radar Chart
     plot_behavior_radar(global_stats, systems, out_dir / "radar_behavior.png", sample_size)
     
+    # Domain Breakdowns
+    if domain_stats:
+        metrics_to_plot = ["judge_score", "exact_match", "hallucination_rate"]
+        for metric in metrics_to_plot:
+            plot_domain_heatmap(domain_stats, systems, metric, out_dir / f"domain_heatmap_{metric}.png")
+            
     logger.info(f"Visualizations saved to {out_dir}")
 
 if __name__ == "__main__":

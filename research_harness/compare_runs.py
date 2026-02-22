@@ -4,6 +4,11 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 import pandas as pd
+import sys
+
+# Add current directory to path so we can import schema
+sys.path.append(str(Path(__file__).parent))
+from schema import AggregatedData
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(name)s] %(message)s')
 logger = logging.getLogger("CompareRuns")
@@ -83,6 +88,20 @@ def extract_global_stats(runs_data: List[RunData]) -> Dict[str, Dict[str, dict]]
         extracted_stats[run.run_id] = run.stats.get("system_stats", {}).get(system_name, {})
     return extracted_stats
 
+def extract_domain_stats(runs_data: List[RunData]) -> Dict[str, Dict[str, Dict[str, dict]]]:
+    """
+    Extracts per_domain statistics from statistics.json directly.
+    Returns: Dict[run_id][domain_name][metric_name] = stats_dict
+    """
+    extracted_domain_stats = {}
+    for run in runs_data:
+        system_name = run.get_system_name()
+        run_domain_stats = {}
+        for domain, d_stats in run.stats.get("per_domain", {}).items():
+            run_domain_stats[domain] = d_stats.get(system_name, {})
+        extracted_domain_stats[run.run_id] = run_domain_stats
+    return extracted_domain_stats
+
 def build_comparison_payload(runs_data: List[RunData]) -> Dict:
     """Builds the final aggregated JSON for the visualizer and LLM Synthesizer."""
     if len(runs_data) < 2:
@@ -90,6 +109,7 @@ def build_comparison_payload(runs_data: List[RunData]) -> Dict:
     
     joined_df = enforce_ap_rh1(runs_data)
     global_stats = extract_global_stats(runs_data)
+    domain_stats = extract_domain_stats(runs_data)
     
     system_names = [r.run_id for r in runs_data]
     
@@ -104,17 +124,26 @@ def build_comparison_payload(runs_data: List[RunData]) -> Dict:
             if len(set(scores)) > 1 and pd.notna(scores).all():
                 divergence_samples.append(row.to_dict())
                 
-    return {
+    raw_payload = {
         "metadata": {
             "runs": [r.run_id for r in runs_data],
             "systems": system_names,
             "paired_sample_n": len(joined_df)
         },
         "global_statistics": global_stats,
+        "domain_statistics": domain_stats,
         "divergence_pairs_ap_rh4": divergence_samples,
         # We need to save the joined DF as a CSV for the visualizer to plot distributions
         "joined_dataframe": joined_df.to_dict(orient="records")
     }
+    
+    # Validate via Pydantic struct before returning
+    try:
+        validated_payload = AggregatedData(**raw_payload)
+        return validated_payload.model_dump()
+    except Exception as e:
+        logger.error(f"Failed to validate generated research payload against AggregatedData schema: {e}")
+        raise
 
 def main():
     parser = argparse.ArgumentParser(description="Research Harness Data Aggregator.")
