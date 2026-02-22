@@ -167,11 +167,34 @@ class Pipeline:
                         progress.advance(task_id)
                         continue
 
-                    # Compute Deterministic Metrics (AP-3: failures return None, not 0.0)
+                    # Get Judge
+                    judge = judge_strategy.assign_judge(system.config.name)
+                    judge_outputs = {}
+                    
+                    if raw_output.error_type:
+                        logger.warning(
+                            "Skipping Judge for %s/%s — SUT error_type='%s'",
+                            system.config.name,
+                            sample.sample_id,
+                            raw_output.error_type,
+                        )
+                        ui.task_warning(
+                            system.config.name,
+                            sample.sample_id,
+                            f"Judge skipped — SUT {raw_output.error_type}",
+                        )
+
+                    # Compute All Metrics (AP-3: failures return None, not 0.0)
                     metric_results = {}
                     for m_name, m_inst in metric_map.items():
                         try:
-                            metric_results[m_name] = m_inst.compute(raw_output, sample)
+                            # Pass judge instance and judge_outputs container down to metrics via kwargs
+                            metric_results[m_name] = m_inst.compute(
+                                raw_output, 
+                                sample, 
+                                judge=judge, 
+                                judge_outputs=judge_outputs
+                            )
                         except Exception as e:
                             logger.error(
                                 "Metric %s failed on %s/%s: %s\n%s",
@@ -182,78 +205,21 @@ class Pipeline:
                                 traceback.format_exc(),
                             )
                             metric_results[m_name] = None  # AP-3: never silently zero
-
-                    # Judge Evaluation (AP-15: skip judges if SUT errored)
-                    judge = judge_strategy.assign_judge(system.config.name)
-                    judge_outputs = {}
-
-                    if raw_output.error_type:
-                        logger.warning(
-                            "Skipping Judge for %s/%s — SUT error_type='%s'",
+                            
+                            # Record error for any judge-dependent metric (AP-24: no hardcoded names)
+                            if m_inst.requires_judge:
+                                judge_outputs[m_name] = f"Metric Exception: {e}"
+                                
+                    # Set UI success status if judge score didn't crash/error
+                    if not raw_output.error_type and metric_results.get("judge_score") is not None:
+                        judge_model_str = ""
+                        if hasattr(judge, "provider") and hasattr(judge, "model"):
+                            judge_model_str = f"judge={judge.provider}/{judge.model}"
+                        ui.task_success(
                             system.config.name,
                             sample.sample_id,
-                            raw_output.error_type,
+                            judge_model_str,
                         )
-                        # AP-15: undefined, not 0.0
-                        metric_results["judge_score"] = None
-                        metric_results["hallucination_rate"] = None
-
-                        ui.task_warning(
-                            system.config.name,
-                            sample.sample_id,
-                            f"Judge skipped — SUT {raw_output.error_type}",
-                        )
-                    else:
-                        try:
-                            score, explanation = judge.evaluate_correctness(
-                                sample.question, sample.gold_answer, raw_output.output
-                            )
-                            metric_results["judge_score"] = score
-                            judge_outputs["correctness"] = explanation
-                        except JudgeAPIError as e:
-                            logger.error(
-                                "Judge correctness failed for %s/%s: %s",
-                                system.config.name,
-                                sample.sample_id,
-                                e,
-                            )
-                            metric_results["judge_score"] = None
-                            judge_outputs["correctness"] = f"ERROR: {e}"
-                            ui.task_error(
-                                system.config.name,
-                                sample.sample_id,
-                                f"Judge correctness failed: {e}",
-                            )
-
-                        try:
-                            hr, hr_details = judge.evaluate_hallucination(raw_output.output, sample.context_prompt)
-                            metric_results["hallucination_rate"] = hr
-                            judge_outputs["hallucination"] = hr_details
-                        except JudgeAPIError as e:
-                            logger.error(
-                                "Judge hallucination failed for %s/%s: %s",
-                                system.config.name,
-                                sample.sample_id,
-                                e,
-                            )
-                            metric_results["hallucination_rate"] = None
-                            judge_outputs["hallucination"] = f"ERROR: {e}"
-                            ui.task_error(
-                                system.config.name,
-                                sample.sample_id,
-                                f"Judge hallucination failed: {e}",
-                            )
-
-                        # Only show success if no judge errors
-                        if metric_results.get("judge_score") is not None:
-                            judge_model_str = ""
-                            if hasattr(judge, "provider") and hasattr(judge, "model"):
-                                judge_model_str = f"judge={judge.provider}/{judge.model}"
-                            ui.task_success(
-                                system.config.name,
-                                sample.sample_id,
-                                judge_model_str,
-                            )
 
                     judge_model_str = None
                     if hasattr(judge, "provider") and hasattr(judge, "model"):

@@ -7,8 +7,8 @@ from glass.metrics.utils import normalize_answer
 from glass.systems.base import RawOutput
 
 
-@register("soft_recall")
-class SoftRecallMetric(BaseMetric):
+@register("soft_f1")
+class SoftF1Metric(BaseMetric):
     @property
     def category(self) -> str:
         return "correctness"
@@ -22,10 +22,17 @@ class SoftRecallMetric(BaseMetric):
 
         if not gold_tokens:
             return None  # Undefined: gold answer is empty
-
+            
         if not pred_tokens:
-            return 0.0  # No tokens predicted → zero recall
+            return 0.0
 
         common = collections.Counter(pred_tokens) & collections.Counter(gold_tokens)
         num_same = sum(common.values())
-        return num_same / len(gold_tokens)
+        
+        if num_same == 0:
+            return 0.0
+            
+        precision = num_same / len(pred_tokens)
+        recall = num_same / len(gold_tokens)
+        
+        return (2 * precision * recall) / (precision + recall)
