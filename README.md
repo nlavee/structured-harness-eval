@@ -40,6 +40,27 @@ python3 research_harness/cli.py --runs <run_id_1> <run_id_2> --provider openai -
 
 ---
 
+## Task Runner
+
+GLASS includes a `robo` task runner to simplify common operations.
+
+**Run an evaluation:**
+```bash
+robo eval:run configs/aa_lcr_full.yaml
+```
+
+**Launch the research harness:**
+```bash
+robo research:harness --runs <run_id_1> <run_id_2>
+```
+
+**View all available tasks:**
+```bash
+robo help
+```
+
+---
+
 ## Core Objectives
 
 GLASS answers a precise research question: **Does a Structured Execution Harness achieve higher task success and lower hallucination rates than raw CLI runtimes while holding the underlying model constant?**

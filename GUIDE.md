@@ -148,6 +148,20 @@ glass run configs/aa_lcr_ablation.yaml
 glass run configs/aa_lcr_full.yaml --resume 20260221_120000_runtime_comparison_v1
 ```
 
+### Task Runner (Alternative)
+You can also use the `robo` task runner for simplified command execution:
+
+```bash
+# Run evaluation
+robo eval:run configs/aa_lcr_subset.yaml
+
+# Launch research harness
+robo research:harness --runs <run_id_1> <run_id_2>
+
+# View all tasks
+robo help
+```
+
 ---
 
 ## 5. CLI Commands

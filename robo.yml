@@ -1,0 +1,75 @@
+
+summary: Task runner for GLASS evaluation and research harness
+
+eval:run:
+  summary: Execute evaluation runs using the GLASS pipeline.
+  usage: robo eval:run <config-path> [flags]
+  description: |
+    Runs the GLASS evaluation pipeline with the specified configuration file.
+    Supports resuming interrupted runs.
+
+    Arguments:
+      <config-path>    Path to the configuration YAML file (required).
+    
+    Flags:
+      --resume <run-id>    Resume a previous run using its ID or path.
+
+  command: |
+    # Verify config path is provided
+    if [ -z "$1" ]; then
+      echo "Error: Config path is required."
+      echo "Usage: robo eval:run <config-path> [--resume <run-id>]"
+      exit 1
+    fi
+    glass run "$@"
+
+eval:help:
+  summary: Show help for evaluation tasks.
+  usage: robo eval:help
+  command: |
+    echo "Evaluation Tasks:"
+    echo "  robo eval:run <config-path> [--resume <run-id>]"
+    echo "    Execute evaluation runs using the GLASS pipeline."
+    echo ""
+    echo "Run 'robo help eval:run' for detailed usage."
+
+research:harness:
+  summary: Launch the research harness for cross-run analysis.
+  usage: robo research:harness [flags]
+  description: |
+    Launches the Research Harness orchestrator to compare runs, generate visualizations, 
+    and synthesize qualitative insights using an LLM.
+
+    Flags:
+      --runs <id1> <id2>...   List of run IDs to compare (space-separated).
+      --runs-dir <path>       Directory containing runs (default: runs).
+      --provider <name>       LLM provider for synthesis (e.g., anthropic, gemini).
+      --model <name>          Specific model for synthesis (e.g., claude-3-opus).
+      --skip-synthesis        Skip the LLM qualitative analysis step.
+
+  command: |
+    python3 research_harness/cli.py "$@"
+
+research:help:
+  summary: Show help for research tasks.
+  usage: robo research:help
+  command: |
+    echo "Research Tasks:"
+    echo "  robo research:harness [flags]"
+    echo "    Launch the Research Harness orchestrator for cross-run analysis."
+    echo ""
+    echo "Run 'robo help research:harness' for detailed usage."
+
+help:
+  summary: Display available commands and global help.
+  usage: robo help [command]
+  description: |
+    Lists all available tasks or displays detailed help for a specific command.
+    
+    Examples:
+      robo help              # List all tasks
+      robo help eval:run     # Show help for eval:run
+      robo help research:harness # Show help for research:harness
+
+  command: |
+    robo help "$@"
