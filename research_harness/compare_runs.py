@@ -4,13 +4,22 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 import pandas as pd
+import numpy as np
+from scipy import stats
 import sys
+from rich.logging import RichHandler
 
 # Add current directory to path so we can import schema
 sys.path.append(str(Path(__file__).parent))
 from schema import AggregatedData
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(name)s] %(message)s')
+# Configure logging to write to STDOUT so the orchestrator can capture it
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(console=None, show_time=False, show_path=False, markup=True)]
+)
 logger = logging.getLogger("CompareRuns")
 
 class RunData:
@@ -102,6 +111,103 @@ def extract_domain_stats(runs_data: List[RunData]) -> Dict[str, Dict[str, Dict[s
         extracted_domain_stats[run.run_id] = run_domain_stats
     return extracted_domain_stats
 
+def compute_win_rates(df: pd.DataFrame, systems: List[str], metric: str = "judge_score") -> Dict[str, Dict[str, float]]:
+    """
+    Computes pairwise win rates (Row > Column) for a given metric.
+    Returns: matrix[row_sys][col_sys] = win_rate (float)
+    """
+    matrix = {}
+    for row_sys in systems:
+        matrix[row_sys] = {}
+        for col_sys in systems:
+            if row_sys == col_sys:
+                matrix[row_sys][col_sys] = 0.0
+                continue
+                
+            col_a = f"{row_sys}_{metric}"
+            col_b = f"{col_sys}_{metric}"
+            
+            if col_a not in df.columns or col_b not in df.columns:
+                matrix[row_sys][col_sys] = 0.0
+                continue
+                
+            # Drop NaNs
+            valid_df = df[[col_a, col_b]].dropna()
+            if valid_df.empty:
+                matrix[row_sys][col_sys] = 0.0
+                continue
+                
+            wins = (valid_df[col_a] > valid_df[col_b]).sum()
+            total = len(valid_df)
+            matrix[row_sys][col_sys] = float(wins / total) if total > 0 else 0.0
+            
+    return matrix
+
+def compute_pairwise_significance(df: pd.DataFrame, systems: List[str], metric: str = "judge_score") -> Dict[str, float]:
+    """
+    Computes pairwise Wilcoxon signed-rank tests with Holm-Bonferroni correction.
+    Returns: Dict["SysA vs SysB"] = corrected_p_value
+    """
+    p_values = {}
+    comparisons = []
+    
+    # 1. Compute raw p-values
+    for i, sys_a in enumerate(systems):
+        for j, sys_b in enumerate(systems):
+            if i >= j: continue # Only upper triangle
+            
+            col_a = f"{sys_a}_{metric}"
+            col_b = f"{sys_b}_{metric}"
+            
+            if col_a not in df.columns or col_b not in df.columns:
+                continue
+                
+            valid_df = df[[col_a, col_b]].dropna()
+            diff = valid_df[col_a] - valid_df[col_b]
+            
+            # Wilcoxon requires non-zero differences
+            diff = diff[diff != 0]
+            
+            if len(diff) < 5:
+                # Too few samples for reliable test
+                p_val = 1.0
+            else:
+                try:
+                    # Two-sided test for general difference
+                    _, p_val = stats.wilcoxon(valid_df[col_a], valid_df[col_b], alternative='two-sided')
+                except ValueError:
+                    # Can happen if all differences are zero
+                    p_val = 1.0
+                    
+            pair_key = f"{sys_a} vs {sys_b}"
+            p_values[pair_key] = p_val
+            comparisons.append((pair_key, p_val))
+            
+    # 2. Apply Holm-Bonferroni Correction
+    # Sort by p-value ascending
+    comparisons.sort(key=lambda x: x[1])
+    
+    m = len(comparisons)
+    corrected_p_values = {}
+    
+    previous_corrected_p = 0.0
+    
+    for k, (pair_key, raw_p) in enumerate(comparisons):
+        # Holm-Bonferroni formula: p_corrected = min(1, max(previous, p * (m - k)))
+        # Note: k is 0-indexed here, so rank is k+1. Denominator is m - k.
+        
+        correction_factor = m - k
+        corrected_p = raw_p * correction_factor
+        
+        # Enforce monotonicity
+        corrected_p = max(corrected_p, previous_corrected_p)
+        corrected_p = min(corrected_p, 1.0)
+        
+        corrected_p_values[pair_key] = corrected_p
+        previous_corrected_p = corrected_p
+        
+    return corrected_p_values
+
 def build_comparison_payload(runs_data: List[RunData]) -> Dict:
     """Builds the final aggregated JSON for the visualizer and LLM Synthesizer."""
     if len(runs_data) < 2:
@@ -113,6 +219,17 @@ def build_comparison_payload(runs_data: List[RunData]) -> Dict:
     
     system_names = [r.run_id for r in runs_data]
     
+    # Compute Paired Metrics
+    win_rate_matrix = {
+        "judge_score": compute_win_rates(joined_df, system_names, "judge_score"),
+        "hallucination_rate": compute_win_rates(joined_df, system_names, "hallucination_rate")
+    }
+    
+    pairwise_significance = {
+        "judge_score": compute_pairwise_significance(joined_df, system_names, "judge_score"),
+        "hallucination_rate": compute_pairwise_significance(joined_df, system_names, "hallucination_rate")
+    }
+
     # Determine the divergence cases for AP-RH4
     logger.info("Extracting divergence samples (where one system got judge_score=1.0 and another 0.0) for AP-RH4.")
     divergence_samples = []
@@ -133,6 +250,8 @@ def build_comparison_payload(runs_data: List[RunData]) -> Dict:
         "global_statistics": global_stats,
         "domain_statistics": domain_stats,
         "divergence_pairs_ap_rh4": divergence_samples,
+        "win_rate_matrix": win_rate_matrix,
+        "pairwise_significance": pairwise_significance,
         # We need to save the joined DF as a CSV for the visualizer to plot distributions
         "joined_dataframe": joined_df.to_dict(orient="records")
     }

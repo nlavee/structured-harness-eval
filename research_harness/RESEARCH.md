@@ -23,6 +23,14 @@ To tease out nuances between models, we require high-density, rigorous visualiza
 - **What:** Plot $\Delta_{\text{metric}}$ for each sample (Structured Harness vs Baseline).
 - **Why:** Evaluates paired improvements. Did the structured harness fix the baseline's failures, or are they failing on completely different samples?
 
+### E. Pairwise Win Rate Matrix
+- **What:** A heatmap matrix showing the percentage of samples where Row System > Column System on the primary metric (`judge_score`).
+- **Why:** Provides a direct, intuitive measure of superiority. If System A wins 20% of the time, loses 5%, and ties 75%, it is clearly superior, even if means are close.
+
+### F. Statistical Significance Heatmap (P-Values)
+- **What:** A heatmap showing the $p$-values from paired Wilcoxon signed-rank tests between every pair of systems, corrected for multiple comparisons (Holm-Bonferroni).
+- **Why:** Immediately visualizes which differences are statistically robust versus random noise.
+
 ## 3. Qualitative LLM Synthesis
 
 Relying entirely on aggregate metrics misses the "why". We will utilize LLMs as hypothesis-generating research assistants.

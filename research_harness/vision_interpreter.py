@@ -7,11 +7,24 @@ from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
 import litellm
+import sys
+from rich.logging import RichHandler
+
+# Ensure the parent directory is in the path to allow absolute imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Load API keys from .env if present
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(name)s] %(message)s')
+from research_harness.llm_utils import get_llm_kwargs
+
+# Configure logging to write to STDOUT so the orchestrator can capture it
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(console=None, show_time=False, show_path=False, markup=True)]
+)
 logger = logging.getLogger("VisionInterpreter")
 
 def encode_image(image_path: Path) -> str:
@@ -78,11 +91,13 @@ def main():
                 }
             ]
             
-            response = litellm.completion(
-                model=model_uri,
-                messages=messages,
-                temperature=0.2
-            )
+            base_kwargs = {
+                "messages": messages,
+                "temperature": 0.2
+            }
+            
+            kwargs = get_llm_kwargs(args.provider, args.model, base_kwargs)
+            response = litellm.completion(**kwargs)
             
             insight_text = response.choices[0].message.content
             

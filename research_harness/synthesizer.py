@@ -4,13 +4,27 @@ import logging
 from pathlib import Path
 from datetime import datetime
 import os
+import sys
 import re
+from rich.logging import RichHandler
+
+# Ensure the parent directory is in the path to allow absolute imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from dotenv import load_dotenv
 
 # Load API keys from .env if present
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(name)s] %(message)s')
+from research_harness.llm_utils import get_llm_kwargs
+
+# Configure logging to write to STDOUT so the orchestrator can capture it
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(console=None, show_time=False, show_path=False, markup=True)]
+)
 logger = logging.getLogger("Synthesizer")
 
 import litellm
@@ -62,6 +76,27 @@ def generate_prompt_context(payload: dict) -> str:
                     context.append(f"    - {sys}: Judge Score: {js:.2f}, Exact Match: {em_str}, Soft Recall: {sr_str}, Hallucination: {hr_str}")
     else:
         context.append("  No domain statistics available.")
+        
+    context.append("\nPAIRWISE WIN RATES (Row > Column on Judge Score):")
+    win_rates = payload.get("win_rate_matrix", {})
+    if win_rates:
+        js_wins = win_rates.get("judge_score", {})
+        for row, cols in js_wins.items():
+            for col, rate in cols.items():
+                if rate > 0:
+                    context.append(f"  - {row} beats {col} in {rate*100:.1f}% of samples")
+    else:
+        context.append("  No win rate data available.")
+        
+    context.append("\nSTATISTICAL SIGNIFICANCE (Holm-Bonferroni Corrected p-values):")
+    p_vals = payload.get("pairwise_significance", {})
+    if p_vals:
+        js_pvals = p_vals.get("judge_score", {})
+        for pair, p in js_pvals.items():
+            sig = "**SIGNIFICANT**" if p < 0.05 else "not significant"
+            context.append(f"  - {pair}: p={p:.4f} ({sig})")
+    else:
+        context.append("  No significance data available.")
         
     context.append("\nPAIRED DIVERGENCES (Judge Score = 1.0 vs 0.0):")
     divergences = payload.get("divergence_pairs_ap_rh4", [])
@@ -124,11 +159,15 @@ def main():
     logger.info(f"Invoking {model_uri} via LiteLLM...")
     
     try:
-        response = litellm.completion(
-            model=model_uri,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.2 # low temperature for analytical task
-        )
+        base_kwargs = {
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2 # low temperature for analytical task
+        }
+        
+        # Inject scalable parameters (API keys, reasoning_effort) via the util
+        kwargs = get_llm_kwargs(args.provider, args.model, base_kwargs)
+        
+        response = litellm.completion(**kwargs)
         
         insight_text = response.choices[0].message.content
         

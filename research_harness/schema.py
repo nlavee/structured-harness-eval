@@ -28,3 +28,10 @@ class AggregatedData(BaseModel):
     
     # Dump the joined inner-join df for visualizer analysis
     joined_dataframe: List[Dict[str, Any]]
+    
+    # Pairwise Win Rates: Dict[metric][row_sys][col_sys] -> float (0.0-1.0)
+    win_rate_matrix: Optional[Dict[str, Dict[str, Dict[str, float]]]] = None
+    
+    # Pairwise Significance: Dict[metric][pair_key] -> p_value (float)
+    # pair_key formatted as "SystemA vs SystemB"
+    pairwise_significance: Optional[Dict[str, Dict[str, float]]] = None

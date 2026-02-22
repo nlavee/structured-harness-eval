@@ -48,6 +48,39 @@ def select_runs(available_runs: list[str]) -> list[str]:
             console.print("\n[bold yellow]Exiting.[/bold yellow]")
             sys.exit(0)
 
+def run_step(command: list[str], description: str, progress, task_id):
+    """Executes a subprocess command, streaming stdout to the console."""
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT, # Merge stderr into stdout
+        text=True,
+        bufsize=1, # Line buffered
+        universal_newlines=True
+    )
+
+    while True:
+        line = process.stdout.readline()
+        if not line and process.poll() is not None:
+            break
+        if line:
+            clean_line = line.strip()
+            # Heuristic to colorize or format specific log lines if needed
+            if "INFO" in clean_line:
+                progress.console.print(f"  [dim]{clean_line}[/dim]")
+            elif "WARNING" in clean_line:
+                 progress.console.print(f"  [bold yellow]{clean_line}[/bold yellow]")
+            elif "ERROR" in clean_line:
+                 progress.console.print(f"  [bold red]{clean_line}[/bold red]")
+            else:
+                 progress.console.print(f"  {clean_line}")
+
+    if process.returncode != 0:
+        progress.console.print(f"[bold red]Step failed with exit code {process.returncode}[/bold red]")
+        sys.exit(process.returncode)
+    
+    progress.update(task_id, completed=100, description=f"[bold green]{description} Complete")
+
 def main():
     parser = argparse.ArgumentParser(description="GLASS Research Harness Orchestrator.")
     parser.add_argument("--runs", nargs="*", help="Run IDs to compare. If empty, prompts interactively.")
@@ -87,7 +120,7 @@ def main():
     with open(out_dir / "command.txt", "w") as f:
         f.write(cmd_str + "\n")
 
-    console.print(Panel(f"Initiating Research Harness\n[bold green]Output Directory:[/bold green] {out_dir}\n[bold blue]Runs:[/bold blue] {', '.join(runs_to_compare)}", title="GLASS Research Harness", style="bold magenta"))
+    console.print(Panel(f"Initiating Research Harness\n[bold green]Output Directory:[/bold green] {out_dir}\n[bold blue]Runs:[/bold blue] {', '.join(runs_to_compare)}\n[bold cyan]Synthesis Model:[/bold cyan] {args.provider}/{args.model}", title="GLASS Research Harness", style="bold magenta"))
     
     harness_dir = Path(__file__).parent
     
@@ -98,23 +131,20 @@ def main():
     ) as progress:
     
         # 1. Run Aggregator
-        task1 = progress.add_task("[cyan]Step 1/3: Data Aggregation & AP-RH1 Enforcement...", total=None)
+        task1 = progress.add_task("[cyan]Step 1/4: Data Aggregation & AP-RH1 Enforcement...", total=None)
         agg_cmd = [sys.executable, str(harness_dir / "compare_runs.py"), "--runs"] + runs_to_compare + ["--runs-dir", str(runs_dir), "--out", str(out_dir / "aggregated_data.json")]
-        subprocess.run(agg_cmd, check=True, capture_output=True)
-        progress.update(task1, completed=100, description="[bold green]Step 1/3 Complete: Data Aggregation")
+        run_step(agg_cmd, "Step 1/4: Data Aggregation", progress, task1)
         
         # 2. Run Visualizer
-        task2 = progress.add_task("[cyan]Step 2/3: Scientific Visualization & AP-RH2 Enforcement...", total=None)
+        task2 = progress.add_task("[cyan]Step 2/4: Scientific Visualization & AP-RH2 Enforcement...", total=None)
         vis_cmd = [sys.executable, str(harness_dir / "visualizer.py"), "--data", str(out_dir / "aggregated_data.json"), "--out-dir", str(out_dir / "figures")]
-        subprocess.run(vis_cmd, check=True, capture_output=True)
-        progress.update(task2, completed=100, description="[bold green]Step 2/3 Complete: Scientific Visualization")
+        run_step(vis_cmd, "Step 2/4: Scientific Visualization", progress, task2)
         
         # 3. Run Synthesizer
         if not args.skip_synthesis:
-            task3 = progress.add_task(f"[cyan]Step 3/3: LLM Synthesis ({args.provider}/{args.model})...", total=None)
+            task3 = progress.add_task(f"[cyan]Step 3/4: LLM Synthesis ({args.provider}/{args.model})...", total=None)
             synth_cmd = ["python", str(harness_dir / "synthesizer.py"), "--data", str(out_dir / "aggregated_data.json"), "--provider", args.provider, "--model", args.model, "--out-dir", str(out_dir)]
-            subprocess.run(synth_cmd, check=True, capture_output=True)
-            progress.update(task3, completed=100, description="[bold green]Step 3/3 Complete: LLM Synthesis")
+            run_step(synth_cmd, "Step 3/4: LLM Synthesis", progress, task3)
         else:
             console.print("[yellow]Step 3: LLM Qualitative Synthesis [SKIPPED][/yellow]")
             
@@ -122,8 +152,7 @@ def main():
         if not args.skip_synthesis:
             task4 = progress.add_task(f"[cyan]Step 4/4: Vision Interpretation ({args.provider}/{args.model})...", total=None)
             vision_cmd = ["python", str(harness_dir / "vision_interpreter.py"), "--figures-dir", str(out_dir / "figures"), "--provider", args.provider, "--model", args.model, "--out-dir", str(out_dir)]
-            subprocess.run(vision_cmd, check=True, capture_output=True)
-            progress.update(task4, completed=100, description="[bold green]Step 4/4 Complete: Vision Interpretation")
+            run_step(vision_cmd, "Step 4/4: Vision Interpretation", progress, task4)
         else:
             console.print("[yellow]Step 4: Vision Interpretation [SKIPPED][/yellow]")
             

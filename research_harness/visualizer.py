@@ -8,12 +8,19 @@ import seaborn as sns
 import numpy as np
 from typing import Dict, List
 import sys
+from rich.logging import RichHandler
 
 # Add current directory to path so we can import schema
 sys.path.append(str(Path(__file__).parent))
 from schema import AggregatedData
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(name)s] %(message)s')
+# Configure logging to write to STDOUT so the orchestrator can capture it
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(console=None, show_time=False, show_path=False, markup=True)]
+)
 logger = logging.getLogger("Visualizer")
 
 # Global style configurations for PhD-level output
@@ -283,6 +290,82 @@ def plot_paired_difference(df: pd.DataFrame, systems: List[str], metrics: List[s
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
+def plot_win_rate_matrix(win_rates: Dict, systems: List[str], metric: str, out_path: Path):
+    """
+    Plots a heatmap matrix of pairwise win rates (Row > Col).
+    """
+    logger.info(f"Generating Win Rate Matrix for {metric}")
+    
+    if not win_rates:
+        logger.warning(f"No win rate data for {metric}")
+        return
+        
+    data = []
+    for row_sys in systems:
+        row = []
+        for col_sys in systems:
+            val = win_rates.get(row_sys, {}).get(col_sys, 0.0)
+            row.append(val)
+        data.append(row)
+        
+    df = pd.DataFrame(data, index=systems, columns=systems)
+    
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(df, annot=True, cmap="Greens", fmt=".2f", vmin=0, vmax=1,
+                cbar_kws={'label': f'Win Rate (Row > Col) on {metric}'})
+    
+    plt.title(f"Pairwise Win Rates: {metric}")
+    plt.ylabel("System A (Winner)")
+    plt.xlabel("System B (Loser)")
+    plt.xticks(rotation=45, ha='right')
+    
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
+def plot_significance_heatmap(p_values: Dict, systems: List[str], metric: str, out_path: Path):
+    """
+    Plots a heatmap of Holm-Bonferroni corrected p-values.
+    """
+    logger.info(f"Generating Significance Heatmap for {metric}")
+    
+    if not p_values:
+        logger.warning(f"No p-value data for {metric}")
+        return
+        
+    # Initialize with 1.0 (not significant)
+    data = np.ones((len(systems), len(systems)))
+    
+    # Fill upper triangle
+    for i, sys_a in enumerate(systems):
+        for j, sys_b in enumerate(systems):
+            if i >= j: continue
+            
+            pair_key = f"{sys_a} vs {sys_b}"
+            # Try both orders just in case
+            p_val = p_values.get(pair_key)
+            if p_val is None:
+                p_val = p_values.get(f"{sys_b} vs {sys_a}", 1.0)
+                
+            data[i, j] = p_val
+            data[j, i] = p_val # Symmetric
+            
+    df = pd.DataFrame(data, index=systems, columns=systems)
+    
+    plt.figure(figsize=(8, 6))
+    
+    # Custom cmap: Green for significant (<0.05), Grey for non-significant
+    # We use a masked array or just a sequential map where low is significant
+    sns.heatmap(df, annot=True, cmap="Reds_r", fmt=".3f", vmin=0, vmax=0.1,
+                cbar_kws={'label': 'Corrected p-value (Holm-Bonferroni)'})
+    
+    plt.title(f"Statistical Significance: {metric}")
+    plt.xticks(rotation=45, ha='right')
+    
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
 def main():
     parser = argparse.ArgumentParser(description="Research Harness Visualizer enforcing AP-RH2.")
     parser.add_argument("--data", required=True, help="Path to aggregated_data.json")
@@ -321,6 +404,16 @@ def main():
         diff_metrics = ["judge_score", "hallucination_rate", "soft_recall"]
         plot_paired_difference(df, systems[:2], diff_metrics, out_dir / "paired_differences.png")
     
+    # Win Rates & Significance (New)
+    win_rates = payload.get("win_rate_matrix", {})
+    p_values = payload.get("pairwise_significance", {})
+    
+    if win_rates:
+        plot_win_rate_matrix(win_rates.get("judge_score"), systems, "judge_score", out_dir / "win_rate_judge_score.png")
+    
+    if p_values:
+        plot_significance_heatmap(p_values.get("judge_score"), systems, "judge_score", out_dir / "significance_judge_score.png")
+
     # Behavioral Radar Chart
     plot_behavior_radar(global_stats, systems, out_dir / "radar_behavior.png", sample_size)
     
