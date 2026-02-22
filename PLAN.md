@@ -176,11 +176,18 @@ glass/                              # Python package (pip install -e .)
 │   ├── manifest.py                 # Reproducibility manifest generation
 │   └── checkpoint.py              # Checkpoint write/read for resume
 │
-└── reports/
-    ├── csv_writer.py               # results.csv (per-sample rows)
-    ├── summary.py                  # summary.md (aggregate + per-domain)
-    └── statistics_report.py        # statistics.json + LaTeX table export
-```
+├── reports/
+│   ├── csv_writer.py               # results.csv (per-sample rows)
+│   ├── summary.py                  # summary.md (aggregate + per-domain)
+│   └── statistics_report.py        # statistics.json + LaTeX table export
+│
+└── research_harness/
+    ├── RESEARCH.md                 # PhD-level methodology and Anti-Patterns (AP-RH)
+    ├── cli.py                      # Orchestrator with Rich TUI for run synthesis
+    ├── schema.py                   # Pydantic schemas (AggregatedData) for robust typing
+    ├── compare_runs.py             # AP-RH1, AP-RH3 aggregator (paired joins)
+    ├── visualizer.py               # AP-RH2 visualizer (Violin, Swarm, Forest CIs, Heatmaps)
+    └── synthesizer.py              # AP-RH4 qualitative LLM analyzer grounded in data
 
 ### 2. Run Artifact Structure
 

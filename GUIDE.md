@@ -246,10 +246,10 @@ python3 research_harness/cli.py --runs RUN_ID_1 RUN_ID_2 --provider gemini --mod
 ### Generated Insights
 The harness populates the `research_insights/` directory with timestamped runs (e.g. `run_YYYYMMDD_HHMMSS/`):
 - `command.txt`: The exact CLI command used to orchestrate the run.
-- `figures/`: Distribution-aware plots and Confidence Interval overlaps suitable for papers.
+- `figures/`: Distribution-aware plots, Confidence Interval overlaps, and Domain Performance Heatmaps.
 - `logs/`: Chain-of-thought logging for the LLM Synthesizer.
-- `aggregated_data.json` & `aggregated_data.csv`: Paired inner-join data.
-- `insights_{timestamp}.md`: LLM qualitative synthesis grounded in paired divergence examples.
+- `aggregated_data.json` & `aggregated_data.csv`: Paired inner-join data, rigorously typed via Pydantic `AggregatedData` schemas.
+- `insights_{timestamp}.md`: LLM qualitative synthesis grounded in paired divergence examples and per-domain accuracy tradeoffs.
 
 ---
 
