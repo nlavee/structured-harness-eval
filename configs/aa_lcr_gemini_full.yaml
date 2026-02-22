@@ -1,5 +1,5 @@
 experiment:
-  name: "gemini_cli_full_test"
+  name: "gemini_3_pro_full_test"
   seed: 42
 
 dataset:
