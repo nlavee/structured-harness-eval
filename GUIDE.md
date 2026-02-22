@@ -227,9 +227,33 @@ runs/
     └── statistics.json        # CIs, p-values, effect sizes, kappa (AP-17, AP-18)
 ```
 
+## 7. Research Harness (Post-Run Analysis)
+
+For PhD-level evaluation of multiple configurations, use the Research Harness tools located in `research_harness/` to enforce the scientific anti-patterns defined in `research_harness/RESEARCH.md`.
+
+### Orchestrator
+
+The orchestrator will prompt you to select multiple runs to perform paired statistical aggregations and LLM synthesis.
+To use it, run:
+```bash
+python3 research_harness/cli.py
+```
+You can also bypass the menu:
+```bash
+python3 research_harness/cli.py --runs RUN_ID_1 RUN_ID_2 --provider gemini --model gemini-2.5-pro
+```
+
+### Generated Insights
+The harness populates the `research_insights/` directory with timestamped runs (e.g. `run_YYYYMMDD_HHMMSS/`):
+- `command.txt`: The exact CLI command used to orchestrate the run.
+- `figures/`: Distribution-aware plots, Confidence Interval overlaps, and Domain Performance Heatmaps.
+- `logs/`: Chain-of-thought logging for the LLM Synthesizer.
+- `aggregated_data.json` & `aggregated_data.csv`: Paired inner-join data, rigorously typed via Pydantic `AggregatedData` schemas.
+- `insights_{timestamp}.md`: LLM qualitative synthesis grounded in paired divergence examples and per-domain accuracy tradeoffs.
+
 ---
 
-## 7. Directory Structure Reference
+## 8. Directory Structure Reference
 
 ```
 glass/

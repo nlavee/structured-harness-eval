@@ -43,3 +43,10 @@ ignore = []
 
 [tool.setuptools.packages.find]
 include = ["glass*"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::FutureWarning:seaborn.*",
+    "ignore::PendingDeprecationWarning:seaborn.*",
+    "ignore::PendingDeprecationWarning:matplotlib.*"
+]
