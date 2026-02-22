@@ -57,6 +57,15 @@ research:help:
     echo ""
     echo "Run 'robo help research:harness' for detailed usage."
 
+schedule:
+  summary: Schedule an evaluation run at a defined time.
+  usage: robo schedule
+  description: |
+    Prompts for a target time and sleeps until then before starting the 
+    evaluation run defined in scripts/run_at_defined_time.sh.
+  command: |
+    bash scripts/run_at_defined_time.sh
+
 help:
   summary: Display available commands and global help.
   usage: robo help [command]
