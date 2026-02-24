@@ -63,6 +63,7 @@ def test_pipeline_flow(mock_strat, mock_metric_cls, mock_sys_cls, mock_ds_cls, m
 
     # Mock Metric
     mock_metric = MagicMock()
+    mock_metric.is_batchable = False
     mock_metric.compute.return_value = 1.0
     mock_metric_cls.return_value = MagicMock(return_value=mock_metric)
 

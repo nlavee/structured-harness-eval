@@ -171,6 +171,16 @@ class Pipeline:
         progress = self.ui.make_progress()
         with progress:
             task_id = progress.add_task("Evaluation", total=len(samples) * len(systems))
+            
+            # Group metrics into serial and batchable
+            serial_metrics = {n: m for n, m in metric_map.items() if not m.is_batchable}
+            batchable_metrics = {n: m for n, m in metric_map.items() if m.is_batchable}
+            
+            # Store inputs for batchable metrics: (metric_name) -> list of (raw_output, sample, metric_kwargs)
+            batch_inputs = {n: [] for n in batchable_metrics}
+            # Store EvalResult IDs to update later: list of (system_name, sample_id)
+            eval_result_ids = []
+
             for sample in samples:
                 for system in systems:
                     try:
@@ -189,7 +199,8 @@ class Pipeline:
                         self.ui.task_warning(system.config.name, sample.sample_id, f"Judge skipped — SUT {raw_output.error_type}")
 
                     metric_results = {}
-                    for m_name, m_inst in metric_map.items():
+                    # Compute serial metrics
+                    for m_name, m_inst in serial_metrics.items():
                         try:
                             # Pass judge instance and judge_outputs container down to metrics via kwargs
                             metric_kwargs = self.config.metric_args.get(m_name, {})
@@ -205,6 +216,11 @@ class Pipeline:
                             metric_results[m_name] = None
                             if m_inst.requires_judge:
                                 judge_outputs[m_name] = f"Metric Exception: {e}"
+                    
+                    # Store inputs for batchable metrics
+                    for m_name in batchable_metrics:
+                        metric_kwargs = self.config.metric_args.get(m_name, {})
+                        batch_inputs[m_name].append((raw_output, sample, metric_kwargs))
                                 
                     if not raw_output.error_type and metric_results.get("judge_score") is not None:
                         judge_model_str = f"judge={judge.provider}/{judge.model}" if hasattr(judge, "provider") and hasattr(judge, "model") else ""
@@ -221,7 +237,32 @@ class Pipeline:
                         judge_outputs=judge_outputs,
                     )
                     self.store.save_eval_result(eval_result)
+                    eval_result_ids.append((system.config.name, sample.sample_id))
                     progress.advance(task_id)
+
+            # Process batchable metrics
+            if batchable_metrics and eval_result_ids:
+                logger.info("Computing batchable metrics: %s", list(batchable_metrics.keys()))
+                for m_name, m_inst in batchable_metrics.items():
+                    inputs = batch_inputs[m_name]
+                    if not inputs:
+                        continue
+                    
+                    # Unzip inputs
+                    raw_outputs, samples_list, metric_kwargs_list = zip(*inputs)
+                    # We assume metric_kwargs are the same for all samples in this run for now
+                    # or the metric handles it. BaseMetric.compute_batch doesn't take list of kwargs.
+                    # BERTScore doesn't need per-sample kwargs currently beyond what's in the loop.
+                    # Here we pass the first one as representative if it exists.
+                    common_kwargs = metric_kwargs_list[0] if metric_kwargs_list else {}
+                    
+                    batch_results = m_inst.compute_batch(list(raw_outputs), list(samples_list), **common_kwargs)
+                    
+                    # Update EvalResults in store
+                    for (sys_name, s_id), score in zip(eval_result_ids, batch_results):
+                        result = self.store.load_eval_result(sys_name, s_id)
+                        result.metrics[m_name] = score
+                        self.store.save_eval_result(result)
 
     def _run_statistics(self):
         self.ui.phase_header(3, "Statistics")

@@ -70,6 +70,12 @@ class RunStore:
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(result.model_dump_json(indent=2))
 
+    def load_eval_result(self, system_name: str, sample_id: str) -> EvalResult:
+        file_path = self.evaluation_dir / system_name / f"sample_{sample_id}.json"
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return EvalResult(**data)
+
     def load_all_eval_results(self) -> list[EvalResult]:
         results = []
         for system_dir in self.evaluation_dir.iterdir():

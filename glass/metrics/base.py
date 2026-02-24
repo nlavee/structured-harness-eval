@@ -28,6 +28,11 @@ class BaseMetric(ABC):
         """Metric category: 'correctness', 'behavioral', or 'operational'."""
         return "behavioral"
 
+    @property
+    def is_batchable(self) -> bool:
+        """Whether this metric supports batch computation."""
+        return False
+
     @abstractmethod
     def compute(self, output: RawOutput, sample: EvaluationSample, **kwargs) -> Optional[float]:
         """Compute the metric score for the given raw output and sample.
@@ -38,4 +43,12 @@ class BaseMetric(ABC):
             for an error condition (AP-3).
         """
         pass
+
+    def compute_batch(self, outputs: list[RawOutput], samples: list[EvaluationSample], **kwargs) -> list[Optional[float]]:
+        """Compute the metric score for a batch of outputs and samples.
+        
+        This should be overridden by subclasses that set ``is_batchable=True``.
+        Default implementation just calls ``compute`` in a loop.
+        """
+        return [self.compute(o, s, **kwargs) for o, s in zip(outputs, samples)]
 
