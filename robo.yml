@@ -18,7 +18,20 @@ eval:run:
       echo "Usage: robo eval:run <config-path> [--resume <run-id>]"
       exit 1
     fi
-    glass run "$@"
+    . venv/bin/activate && python3 glass/cli.py run "$@"
+
+eval:re-eval:
+  summary: Branch a previous run and re-evaluate Phase 2+ with a new config.
+  usage: robo eval:re-eval <config-path> <source-run-id>
+  description: |
+    Bypasses Phase 1 generating requests and inherits inference artifacts
+    from a source run id, applying a new config into a branched sub-run.
+  command: |
+    if [ -z "$2" ]; then
+      echo "Usage: robo eval:re-eval <config-path> <source-run-id>"
+      exit 1
+    fi
+    . venv/bin/activate && python3 glass/cli.py run "$1" --re-evaluate "$2"
 
 eval:help:
   summary: Show help for evaluation tasks.
@@ -45,7 +58,7 @@ research:harness:
       --skip-synthesis        Skip the LLM qualitative analysis step.
 
   command: |
-    python3 research_harness/cli.py "$@"
+    . venv/bin/activate && python3 research_harness/cli.py "$@"
 
 research:help:
   summary: Show help for research tasks.
