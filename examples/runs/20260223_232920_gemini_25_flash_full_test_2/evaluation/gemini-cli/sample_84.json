@@ -1,0 +1,26 @@
+{
+  "sample_id": "84",
+  "system_name": "gemini-cli",
+  "domain": "Legal",
+  "judge_model": "openai/gpt-4o-mini-2024-07-18",
+  "metrics": {
+    "exact_match": 0.0,
+    "soft_recall": 0.6666666666666666,
+    "soft_f1": 0.09302325581395349,
+    "latency_s": 23.14331293106079,
+    "verbosity": 18.1875,
+    "refusal_rate": 0.0,
+    "error_rate": 0.0,
+    "answer_length": 46.0,
+    "citation_presence": 0.0,
+    "confidence_score": 1.0,
+    "answer_completeness": 1.0,
+    "reasoning_depth": 0.0,
+    "response_consistency": 0.1,
+    "rouge_score_f1": 0.07692307692307691,
+    "rouge_score_recall": 0.6666666666666666,
+    "bert_score_f1": 0.6943917274475098
+  },
+  "judge_outputs": {},
+  "human_label": null
+}

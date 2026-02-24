@@ -1,0 +1,26 @@
+{
+  "sample_id": "79",
+  "system_name": "gemini-cli",
+  "domain": "Government_Consultations",
+  "judge_model": "openai/gpt-4o-mini-2024-07-18",
+  "metrics": {
+    "exact_match": 0.0,
+    "soft_recall": 1.0,
+    "soft_f1": 0.02247191011235955,
+    "latency_s": 40.16770124435425,
+    "verbosity": 342.5,
+    "refusal_rate": 0.0,
+    "error_rate": 0.0,
+    "answer_length": 101.0,
+    "citation_presence": 0.0,
+    "confidence_score": 0.5,
+    "answer_completeness": 1.0,
+    "reasoning_depth": 0.3,
+    "response_consistency": 0.1111111111111111,
+    "rouge_score_f1": 0.01923076923076923,
+    "rouge_score_recall": 1.0,
+    "bert_score_f1": 0.5462694764137268
+  },
+  "judge_outputs": {},
+  "human_label": null
+}

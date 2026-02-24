@@ -15,6 +15,9 @@ This directory contains example outputs from the **GLASS (Global Long-context Ag
   - `insights.md`: LLM-generated qualitative synthesis and error analysis grounded in paired divergences.
   - `aggregated_data.json`: Cross-run data extracted for scientific comparison.
 
+> [!NOTE]
+> The `logs/` directory, which typically contains the raw request text sent to the LLM during synthesis and vision interpretation, has been omitted from these examples to keep the artifacts concise.
+
 ## Purpose
 
 These examples serve several purposes:

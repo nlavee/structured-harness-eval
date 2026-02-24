@@ -152,9 +152,9 @@ cython_debug/
 .vscode/
 
 # Project specific
-runs/
-evaluation/
-research_insights/
+/runs/
+/evaluation/
+/research_insights/
 .ruff_cache/
 
 # Data

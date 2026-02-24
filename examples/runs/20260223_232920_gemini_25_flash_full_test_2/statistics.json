@@ -1,0 +1,643 @@
+{
+  "run_config": {
+    "n_samples": 100,
+    "n_systems": 1,
+    "systems": [
+      "gemini-cli"
+    ],
+    "metrics": [
+      "answer_completeness",
+      "answer_length",
+      "bert_score_f1",
+      "citation_presence",
+      "confidence_score",
+      "error_rate",
+      "exact_match",
+      "latency_s",
+      "reasoning_depth",
+      "refusal_rate",
+      "response_consistency",
+      "rouge_score_f1",
+      "rouge_score_recall",
+      "soft_f1",
+      "soft_recall",
+      "verbosity"
+    ],
+    "bootstrap_resamples": 100,
+    "alpha": 0.05,
+    "seed": 42
+  },
+  "system_stats": {
+    "gemini-cli": {
+      "answer_completeness": {
+        "n": 96,
+        "mean": 1.0,
+        "std": 0.0,
+        "median": 1.0,
+        "ci_low": 1.0,
+        "ci_high": 1.0
+      },
+      "answer_length": {
+        "n": 96,
+        "mean": 74.22916666666667,
+        "std": 81.74904168228653,
+        "median": 43.0,
+        "ci_low": 61.68541666666666,
+        "ci_high": 90.41223958333333
+      },
+      "bert_score_f1": {
+        "n": 96,
+        "mean": 0.6963628350446621,
+        "std": 0.10154807616782201,
+        "median": 0.6933932304382324,
+        "ci_low": 0.6747072094896187,
+        "ci_high": 0.7194102355744689
+      },
+      "citation_presence": {
+        "n": 96,
+        "mean": 0.0,
+        "std": 0.0,
+        "median": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0
+      },
+      "confidence_score": {
+        "n": 96,
+        "mean": 0.515625,
+        "std": 0.11303403340734743,
+        "median": 0.5,
+        "ci_low": 0.4895833333333333,
+        "ci_high": 0.5416666666666666
+      },
+      "error_rate": {
+        "n": 100,
+        "mean": 0.04,
+        "std": 0.19595917942265423,
+        "median": 0.0,
+        "ci_low": 0.01,
+        "ci_high": 0.07
+      },
+      "exact_match": {
+        "n": 96,
+        "mean": 0.010416666666666666,
+        "std": 0.1015291077584267,
+        "median": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.03671874999999991
+      },
+      "latency_s": {
+        "n": 100,
+        "mean": 43.39150944232941,
+        "std": 40.10306128450802,
+        "median": 28.664346575737,
+        "ci_low": 35.44444018149376,
+        "ci_high": 50.205993866086004
+      },
+      "reasoning_depth": {
+        "n": 96,
+        "mean": 0.146875,
+        "std": 0.25288054039078084,
+        "median": 0.0,
+        "ci_low": 0.09999999999999999,
+        "ci_high": 0.19757812499999994
+      },
+      "refusal_rate": {
+        "n": 96,
+        "mean": 0.0,
+        "std": 0.0,
+        "median": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0
+      },
+      "response_consistency": {
+        "n": 96,
+        "mean": 0.11534925374022642,
+        "std": 0.1536968152303371,
+        "median": 0.06666666666666667,
+        "ci_low": 0.08724785310580696,
+        "ci_high": 0.15136523708636887
+      },
+      "rouge_score_f1": {
+        "n": 96,
+        "mean": 0.15023272197085816,
+        "std": 0.19476686734154658,
+        "median": 0.06522509748316199,
+        "ci_low": 0.10952682554996222,
+        "ci_high": 0.19087845855801963
+      },
+      "rouge_score_recall": {
+        "n": 96,
+        "mean": 0.630918188005771,
+        "std": 0.3760370433213395,
+        "median": 0.698051948051948,
+        "ci_low": 0.5746055813032065,
+        "ci_high": 0.7047014844175586
+      },
+      "soft_f1": {
+        "n": 96,
+        "mean": 0.1606722997563073,
+        "std": 0.2110740854193012,
+        "median": 0.07394590656588652,
+        "ci_low": 0.11146342365862484,
+        "ci_high": 0.20428951258953695
+      },
+      "soft_recall": {
+        "n": 96,
+        "mean": 0.647793207949458,
+        "std": 0.4119409389522908,
+        "median": 0.873015873015873,
+        "ci_low": 0.5752499760162904,
+        "ci_high": 0.7449293408116937
+      },
+      "verbosity": {
+        "n": 96,
+        "mean": 61.816748868566435,
+        "std": 111.57696638983329,
+        "median": 18.875598086124402,
+        "ci_low": 44.76166932045498,
+        "ci_high": 89.09436730239825
+      }
+    }
+  },
+  "primary_hypothesis": {},
+  "secondary_comparisons": {},
+  "per_domain": {
+    "Academia": {
+      "gemini-cli": {
+        "answer_completeness": {
+          "n": 5,
+          "mean": 1.0
+        },
+        "answer_length": {
+          "n": 5,
+          "mean": 80.4
+        },
+        "bert_score_f1": {
+          "n": 5,
+          "mean": 0.7529053449630737
+        },
+        "citation_presence": {
+          "n": 5,
+          "mean": 0.0
+        },
+        "confidence_score": {
+          "n": 5,
+          "mean": 0.6
+        },
+        "error_rate": {
+          "n": 5,
+          "mean": 0.0
+        },
+        "exact_match": {
+          "n": 5,
+          "mean": 0.0
+        },
+        "latency_s": {
+          "n": 5,
+          "mean": 28.791172790527344
+        },
+        "reasoning_depth": {
+          "n": 5,
+          "mean": 0.24
+        },
+        "refusal_rate": {
+          "n": 5,
+          "mean": 0.0
+        },
+        "response_consistency": {
+          "n": 5,
+          "mean": 0.034722222222222224
+        },
+        "rouge_score_f1": {
+          "n": 5,
+          "mean": 0.16684262667710187
+        },
+        "rouge_score_recall": {
+          "n": 5,
+          "mean": 0.9037878787878789
+        },
+        "soft_f1": {
+          "n": 5,
+          "mean": 0.1834863001529668
+        },
+        "soft_recall": {
+          "n": 5,
+          "mean": 0.9532467532467532
+        },
+        "verbosity": {
+          "n": 5,
+          "mean": 19.02925604476824
+        }
+      }
+    },
+    "Company_Documents": {
+      "gemini-cli": {
+        "answer_completeness": {
+          "n": 61,
+          "mean": 1.0
+        },
+        "answer_length": {
+          "n": 61,
+          "mean": 80.73770491803279
+        },
+        "bert_score_f1": {
+          "n": 61,
+          "mean": 0.6959012160535718
+        },
+        "citation_presence": {
+          "n": 61,
+          "mean": 0.0
+        },
+        "confidence_score": {
+          "n": 61,
+          "mean": 0.5
+        },
+        "error_rate": {
+          "n": 63,
+          "mean": 0.031746031746031744
+        },
+        "exact_match": {
+          "n": 61,
+          "mean": 0.01639344262295082
+        },
+        "latency_s": {
+          "n": 63,
+          "mean": 44.69810385174222
+        },
+        "reasoning_depth": {
+          "n": 61,
+          "mean": 0.14754098360655735
+        },
+        "refusal_rate": {
+          "n": 61,
+          "mean": 0.0
+        },
+        "response_consistency": {
+          "n": 61,
+          "mean": 0.13559206865409124
+        },
+        "rouge_score_f1": {
+          "n": 61,
+          "mean": 0.15948302291130778
+        },
+        "rouge_score_recall": {
+          "n": 61,
+          "mean": 0.623054364126626
+        },
+        "soft_f1": {
+          "n": 61,
+          "mean": 0.17095011034033852
+        },
+        "soft_recall": {
+          "n": 61,
+          "mean": 0.6558112652374948
+        },
+        "verbosity": {
+          "n": 61,
+          "mean": 59.779006159967835
+        }
+      }
+    },
+    "Government_Consultations": {
+      "gemini-cli": {
+        "answer_completeness": {
+          "n": 9,
+          "mean": 1.0
+        },
+        "answer_length": {
+          "n": 9,
+          "mean": 45.666666666666664
+        },
+        "bert_score_f1": {
+          "n": 9,
+          "mean": 0.713965978887346
+        },
+        "citation_presence": {
+          "n": 9,
+          "mean": 0.0
+        },
+        "confidence_score": {
+          "n": 9,
+          "mean": 0.5555555555555556
+        },
+        "error_rate": {
+          "n": 11,
+          "mean": 0.18181818181818182
+        },
+        "exact_match": {
+          "n": 9,
+          "mean": 0.0
+        },
+        "latency_s": {
+          "n": 11,
+          "mean": 59.66835728558627
+        },
+        "reasoning_depth": {
+          "n": 9,
+          "mean": 0.12222222222222223
+        },
+        "refusal_rate": {
+          "n": 9,
+          "mean": 0.0
+        },
+        "response_consistency": {
+          "n": 9,
+          "mean": 0.04560185185185185
+        },
+        "rouge_score_f1": {
+          "n": 9,
+          "mean": 0.2292719488245563
+        },
+        "rouge_score_recall": {
+          "n": 9,
+          "mean": 0.7241184741184741
+        },
+        "soft_f1": {
+          "n": 9,
+          "mean": 0.2357203860636355
+        },
+        "soft_recall": {
+          "n": 9,
+          "mean": 0.7489621489621489
+        },
+        "verbosity": {
+          "n": 9,
+          "mean": 61.24561507109815
+        }
+      }
+    },
+    "Industry_Reports": {
+      "gemini-cli": {
+        "answer_completeness": {
+          "n": 8,
+          "mean": 1.0
+        },
+        "answer_length": {
+          "n": 8,
+          "mean": 92.125
+        },
+        "bert_score_f1": {
+          "n": 8,
+          "mean": 0.6230745688080788
+        },
+        "citation_presence": {
+          "n": 8,
+          "mean": 0.0
+        },
+        "confidence_score": {
+          "n": 8,
+          "mean": 0.5
+        },
+        "error_rate": {
+          "n": 8,
+          "mean": 0.0
+        },
+        "exact_match": {
+          "n": 8,
+          "mean": 0.0
+        },
+        "latency_s": {
+          "n": 8,
+          "mean": 39.636127173900604
+        },
+        "reasoning_depth": {
+          "n": 8,
+          "mean": 0.225
+        },
+        "refusal_rate": {
+          "n": 8,
+          "mean": 0.0
+        },
+        "response_consistency": {
+          "n": 8,
+          "mean": 0.14412878787878786
+        },
+        "rouge_score_f1": {
+          "n": 8,
+          "mean": 0.021758191402731858
+        },
+        "rouge_score_recall": {
+          "n": 8,
+          "mean": 0.5
+        },
+        "soft_f1": {
+          "n": 8,
+          "mean": 0.019444363200304175
+        },
+        "soft_recall": {
+          "n": 8,
+          "mean": 0.375
+        },
+        "verbosity": {
+          "n": 8,
+          "mean": 171.80411255411255
+        }
+      }
+    },
+    "Legal": {
+      "gemini-cli": {
+        "answer_completeness": {
+          "n": 6,
+          "mean": 1.0
+        },
+        "answer_length": {
+          "n": 6,
+          "mean": 63.166666666666664
+        },
+        "bert_score_f1": {
+          "n": 6,
+          "mean": 0.6794841686884562
+        },
+        "citation_presence": {
+          "n": 6,
+          "mean": 0.0
+        },
+        "confidence_score": {
+          "n": 6,
+          "mean": 0.5833333333333334
+        },
+        "error_rate": {
+          "n": 6,
+          "mean": 0.0
+        },
+        "exact_match": {
+          "n": 6,
+          "mean": 0.0
+        },
+        "latency_s": {
+          "n": 6,
+          "mean": 26.91393005847931
+        },
+        "reasoning_depth": {
+          "n": 6,
+          "mean": 0.08333333333333333
+        },
+        "refusal_rate": {
+          "n": 6,
+          "mean": 0.0
+        },
+        "response_consistency": {
+          "n": 6,
+          "mean": 0.07802197802197802
+        },
+        "rouge_score_f1": {
+          "n": 6,
+          "mean": 0.06314123282449075
+        },
+        "rouge_score_recall": {
+          "n": 6,
+          "mean": 0.5218253968253969
+        },
+        "soft_f1": {
+          "n": 6,
+          "mean": 0.0735606340257503
+        },
+        "soft_recall": {
+          "n": 6,
+          "mean": 0.5555555555555555
+        },
+        "verbosity": {
+          "n": 6,
+          "mean": 23.7170664983165
+        }
+      }
+    },
+    "Marketing": {
+      "gemini-cli": {
+        "answer_completeness": {
+          "n": 6,
+          "mean": 1.0
+        },
+        "answer_length": {
+          "n": 6,
+          "mean": 35.5
+        },
+        "bert_score_f1": {
+          "n": 6,
+          "mean": 0.7213054895401001
+        },
+        "citation_presence": {
+          "n": 6,
+          "mean": 0.0
+        },
+        "confidence_score": {
+          "n": 6,
+          "mean": 0.5
+        },
+        "error_rate": {
+          "n": 6,
+          "mean": 0.0
+        },
+        "exact_match": {
+          "n": 6,
+          "mean": 0.0
+        },
+        "latency_s": {
+          "n": 6,
+          "mean": 34.449538509051
+        },
+        "reasoning_depth": {
+          "n": 6,
+          "mean": 0.08333333333333333
+        },
+        "refusal_rate": {
+          "n": 6,
+          "mean": 0.0
+        },
+        "response_consistency": {
+          "n": 6,
+          "mean": 0.0787037037037037
+        },
+        "rouge_score_f1": {
+          "n": 6,
+          "mean": 0.17018018140251143
+        },
+        "rouge_score_recall": {
+          "n": 6,
+          "mean": 0.6435897435897436
+        },
+        "soft_f1": {
+          "n": 6,
+          "mean": 0.15608465608465608
+        },
+        "soft_recall": {
+          "n": 6,
+          "mean": 0.5572390572390572
+        },
+        "verbosity": {
+          "n": 6,
+          "mean": 20.21409821903243
+        }
+      }
+    },
+    "Survey_Reports": {
+      "gemini-cli": {
+        "answer_completeness": {
+          "n": 1,
+          "mean": 1.0
+        },
+        "answer_length": {
+          "n": 1,
+          "mean": 59.0
+        },
+        "bert_score_f1": {
+          "n": 1,
+          "mean": 0.8213029503822327
+        },
+        "citation_presence": {
+          "n": 1,
+          "mean": 0.0
+        },
+        "confidence_score": {
+          "n": 1,
+          "mean": 0.5
+        },
+        "error_rate": {
+          "n": 1,
+          "mean": 0.0
+        },
+        "exact_match": {
+          "n": 1,
+          "mean": 0.0
+        },
+        "latency_s": {
+          "n": 1,
+          "mean": 37.59277868270874
+        },
+        "reasoning_depth": {
+          "n": 1,
+          "mean": 0.0
+        },
+        "refusal_rate": {
+          "n": 1,
+          "mean": 0.0
+        },
+        "response_consistency": {
+          "n": 1,
+          "mean": 0.125
+        },
+        "rouge_score_f1": {
+          "n": 1,
+          "mean": 0.22222222222222224
+        },
+        "rouge_score_recall": {
+          "n": 1,
+          "mean": 0.5333333333333333
+        },
+        "soft_f1": {
+          "n": 1,
+          "mean": 0.42424242424242425
+        },
+        "soft_recall": {
+          "n": 1,
+          "mean": 1.0
+        },
+        "verbosity": {
+          "n": 1,
+          "mean": 3.5118110236220472
+        }
+      }
+    }
+  },
+  "multiple_comparisons_note": "This run compared 1 systems across 16 metrics (0 total pairwise comparisons at \u03b1=0.05). Expected false positives by chance: ~0.0. Primary claims are pre-specified (judge_score, hallucination_rate, Structured Harness vs baselines only). All other comparisons are exploratory."
+}

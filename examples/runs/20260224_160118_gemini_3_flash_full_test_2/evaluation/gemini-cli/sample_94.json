@@ -1,0 +1,26 @@
+{
+  "sample_id": "94",
+  "system_name": "gemini-cli",
+  "domain": "Marketing",
+  "judge_model": "openai/gpt-4o-mini-2024-07-18",
+  "metrics": {
+    "exact_match": 0.0,
+    "soft_recall": 0.0,
+    "soft_f1": 0.0,
+    "latency_s": 41.40584874153137,
+    "verbosity": 141.5,
+    "refusal_rate": 0.0,
+    "error_rate": 0.0,
+    "answer_length": 89.0,
+    "citation_presence": 0.0,
+    "confidence_score": 0.5,
+    "answer_completeness": 1.0,
+    "reasoning_depth": 0.1,
+    "response_consistency": 0.3333333333333333,
+    "rouge_score_f1": 0.021276595744680847,
+    "rouge_score_recall": 0.5,
+    "bert_score_f1": 0.5651919841766357
+  },
+  "judge_outputs": {},
+  "human_label": null
+}

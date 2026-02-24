@@ -1,0 +1,1 @@
+research_harness/cli.py --runs 20260223_191501_gemini_3_pro_full_test_1:gemini-3-pro 20260224_160118_gemini_3_flash_full_test_2:gemini-3-flash 20260223_232920_gemini_25_flash_full_test_2:gemini-2.5-flash 20260224_090323_gemini_25_pro_full_test_1:gemini-2.5-pro --provider gemini --model gemini-2.5-pro

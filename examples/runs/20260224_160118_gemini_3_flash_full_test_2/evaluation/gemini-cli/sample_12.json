@@ -1,0 +1,26 @@
+{
+  "sample_id": "12",
+  "system_name": "gemini-cli",
+  "domain": "Company_Documents",
+  "judge_model": "openai/gpt-4o-mini-2024-07-18",
+  "metrics": {
+    "exact_match": 0.0,
+    "soft_recall": 0.875,
+    "soft_f1": 0.358974358974359,
+    "latency_s": 31.88608717918396,
+    "verbosity": 5.516483516483516,
+    "refusal_rate": 0.0,
+    "error_rate": 0.0,
+    "answer_length": 73.0,
+    "citation_presence": 0.0,
+    "confidence_score": 0.5,
+    "answer_completeness": 1.0,
+    "reasoning_depth": 0.0,
+    "response_consistency": 0.23076923076923078,
+    "rouge_score_f1": 0.309278350515464,
+    "rouge_score_recall": 0.75,
+    "bert_score_f1": 0.7872409820556641
+  },
+  "judge_outputs": {},
+  "human_label": null
+}
