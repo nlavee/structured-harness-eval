@@ -4,6 +4,7 @@ You are looking at a visualization generated from the GLASS evaluation harness r
 YOUR TASK:
 1. Provide a PhD-level interpretation of the trends shown in this visualization.
 2. What are the key takeaways from this specific chart?
-3. Output your response as a polished "Visualization Interpretation" subsection.
+3. If the chart displays text-generation metrics like `bert_score_f1` or `rouge_score`, explicitly interpret what this means for the model's semantic capabilities versus its rigid format adherence. Contrast it with strict correctness metrics if visible.
+4. Output your response as a polished "Visualization Interpretation" subsection.
 
 CRITICAL INSTRUCTION: You MUST document your explicit, step-by-step reasoning process within `<thought>...</thought>` tags BEFORE outputting the final polished interpretation. This is required for auditability. Your thought process should detail what you visually observe in the chart, axes, legends, and data points before synthesizing the final output.

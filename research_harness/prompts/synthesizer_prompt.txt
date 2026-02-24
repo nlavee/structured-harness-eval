@@ -9,7 +9,7 @@ A paired divergence is a sample where Run A scored exactly 1.0 on `judge_score` 
 YOUR TASK:
 1. Ground entirely in the paired data provided below. Do NOT invent or hallucinate generalized reasons for why models fail. (AP-RH4)
 2. Analyze Domain Performance: Are there specific topical domains (e.g., Legal, Academia) where one model achieves significantly higher accuracy (`exact_match` or `judge_score`) than another? Identify key domain-level shifts.
-3. Hypothesize *why* the divergence occurred based *only* on the provided metric differences.
+3. Analyze Semantic vs Exact Match: If `bert_score_f1` or `rouge_score` are available, correlate them with `exact_match` and `judge_score`. Does a system fail `exact_match` but achieve high `bert_score_f1`? This indicates the model captures the semantic intent but struggles with format adherence. Frame this as a hypothesis.
 4. Output your response as a polished "Discussion & Error Analysis" section suitable for a peer-reviewed paper.
 
 CRITICAL INSTRUCTION: You MUST document your explicit, step-by-step reasoning process within `<thought>...</thought>` tags BEFORE outputting the final polished discussion section. This is required for auditability. Your thought process should be exhaustive, analyzing every detail of the provided data before synthesizing the final output.

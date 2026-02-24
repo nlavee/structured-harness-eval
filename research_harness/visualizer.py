@@ -391,36 +391,40 @@ def main():
     domain_stats = payload.get("domain_statistics", {})
     df = pd.DataFrame(payload["joined_dataframe"])
     
-    # Forest Plots for Primary Metrics
-    plot_forest_cis(global_stats, systems, "judge_score", out_dir / "forest_judge_score.png", sample_size)
-    plot_forest_cis(global_stats, systems, "hallucination_rate", out_dir / "forest_hallucination_rate.png", sample_size)
-    
-    # Continuous metrics
-    continuous_metrics = ["hallucination_rate", "soft_recall", "latency_s"]
-    plot_paired_violin(df, systems, continuous_metrics, out_dir / "violin_distributions.png")
-    
-    # AP-RH2 Paired Differences
-    if len(systems) >= 2:
-        diff_metrics = ["judge_score", "hallucination_rate", "soft_recall"]
-        plot_paired_difference(df, systems[:2], diff_metrics, out_dir / "paired_differences.png")
-    
-    # Win Rates & Significance (New)
+    # Dynamically extract all metrics present in the win_rate_matrix (computed by compare_runs)
     win_rates = payload.get("win_rate_matrix", {})
     p_values = payload.get("pairwise_significance", {})
     
-    if win_rates:
-        plot_win_rate_matrix(win_rates.get("judge_score"), systems, "judge_score", out_dir / "win_rate_judge_score.png")
+    intersection_metrics = list(win_rates.keys())
+    if not intersection_metrics:
+        logger.warning("No dynamic metrics found in the payload win_rate_matrix. Visualizations may be empty.")
     
-    if p_values:
-        plot_significance_heatmap(p_values.get("judge_score"), systems, "judge_score", out_dir / "significance_judge_score.png")
+    # 1. Forest Plots (Primary CIs) for every metric
+    for metric in intersection_metrics:
+        plot_forest_cis(global_stats, systems, metric, out_dir / f"forest_ci_{metric}.png", sample_size)
+    
+    # 2. Continuous distributions (Violin Plots) - Plotted individually to prevent clustering
+    for metric in intersection_metrics:
+        plot_paired_violin(df, systems, [metric], out_dir / f"violin_dist_{metric}.png")
+    
+    # 3. Paired Differences - Plotted individually
+    if len(systems) >= 2:
+        for metric in intersection_metrics:
+            plot_paired_difference(df, systems[:2], [metric], out_dir / f"paired_diff_{metric}.png")
+    
+    # 4. Win Rates & Significance Heatmaps
+    for metric in intersection_metrics:
+        if metric in win_rates:
+            plot_win_rate_matrix(win_rates.get(metric), systems, metric, out_dir / f"win_rate_{metric}.png")
+        if metric in p_values:
+            plot_significance_heatmap(p_values.get(metric), systems, metric, out_dir / f"significance_{metric}.png")
 
-    # Behavioral Radar Chart
+    # 5. Behavioral Radar Chart
     plot_behavior_radar(global_stats, systems, out_dir / "radar_behavior.png", sample_size)
     
-    # Domain Breakdowns
+    # 6. Domain Breakdowns (For all dynamic metrics)
     if domain_stats:
-        metrics_to_plot = ["judge_score", "exact_match", "hallucination_rate"]
-        for metric in metrics_to_plot:
+        for metric in intersection_metrics:
             plot_domain_heatmap(domain_stats, systems, metric, out_dir / f"domain_heatmap_{metric}.png")
             
     logger.info(f"Visualizations saved to {out_dir}")
