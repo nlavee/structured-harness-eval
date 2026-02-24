@@ -191,7 +191,15 @@ class Pipeline:
                     metric_results = {}
                     for m_name, m_inst in metric_map.items():
                         try:
-                            metric_results[m_name] = m_inst.compute(raw_output, sample, judge=judge, judge_outputs=judge_outputs)
+                            # Pass judge instance and judge_outputs container down to metrics via kwargs
+                            metric_kwargs = self.config.metric_args.get(m_name, {})
+                            metric_results[m_name] = m_inst.compute(
+                                raw_output, 
+                                sample, 
+                                judge=judge, 
+                                judge_outputs=judge_outputs,
+                                **metric_kwargs
+                            )
                         except Exception as e:
                             logger.error("Metric %s failed on %s/%s: %s\n%s", m_name, system.config.name, sample.sample_id, e, traceback.format_exc())
                             metric_results[m_name] = None

@@ -48,6 +48,14 @@ metrics:
   - reasoning_depth
   - response_consistency
 
+  - rouge_score_f1
+  - rouge_score_recall
+  - bert_score_f1
+
+metric_args:
+  bert_score_f1:
+    model_type: "distilbert-base-uncased"
+
 judges:
   strategy: "fixed"
   fixed:

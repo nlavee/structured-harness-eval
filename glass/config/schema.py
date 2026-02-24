@@ -67,6 +67,7 @@ class Config(BaseModel):
     dataset: DatasetConfig
     systems: List[SystemConfig]
     metrics: List[str]
+    metric_args: Dict[str, dict] = Field(default_factory=dict)
     judges: JudgeConfig
     statistics: StatisticsConfig
     output: OutputConfig

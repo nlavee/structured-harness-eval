@@ -16,6 +16,8 @@ import glass.metrics.latency  # noqa: F401
 import glass.metrics.refusal  # noqa: F401
 import glass.metrics.soft_recall  # noqa: F401
 import glass.metrics.verbosity  # noqa: F401
+import glass.metrics.rouge_score  # noqa: F401
+import glass.metrics.bert_score  # noqa: F401
 import glass.systems.claude  # noqa: F401
 import glass.systems.codex  # noqa: F401
 import glass.systems.gemini  # noqa: F401

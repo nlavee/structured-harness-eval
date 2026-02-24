@@ -59,15 +59,13 @@ def enforce_ap_rh1(runs_data: List[RunData]) -> pd.DataFrame:
     """
     logger.info("Enforcing AP-RH1: Computing strict inner join on sample_id across all runs.")
     
-    # Base configuration:
-    # Instead of relying on automatic `_x` and `_y` suffixes in pandas merge,
-    # we explicitly extract the columns we want for each run and prefix them.
+    # Compute the strict intersection of all metric columns across all runs
+    metric_cols_list = [set(r.results_df.columns) - {"sample_id", "domain", "system_name"} for r in runs_data]
+    intersection_metrics = list(set.intersection(*metric_cols_list))
     
-    # Start with just the sample_id and domain
+    # Base configuration starts with just the sample_id and domain
     base_df = runs_data[0].results_df[["sample_id", "domain"]].copy()
     joined_df = base_df
-    
-    metric_cols = [c for c in runs_data[0].results_df.columns if c not in ["sample_id", "domain", "system_name"]]
     
     for run in runs_data:
         df_run = run.results_df.copy()
@@ -75,9 +73,10 @@ def enforce_ap_rh1(runs_data: List[RunData]) -> pd.DataFrame:
         # We use the run_id as the unique prefix per user request for clarity in visuals
         prefix = run.run_id
         
-        rename_mapping = {col: f"{prefix}_{col}" for col in metric_cols}
+        rename_mapping = {col: f"{prefix}_{col}" for col in intersection_metrics}
         
-        df_run_metrics = df_run[["sample_id", "domain"] + metric_cols].rename(columns=rename_mapping)
+        # Only select the intersection columns to avoid KeyErrors on older runs
+        df_run_metrics = df_run[["sample_id", "domain"] + intersection_metrics].rename(columns=rename_mapping)
         
         joined_df = pd.merge(joined_df, df_run_metrics, on=["sample_id", "domain"], how="inner")
         
@@ -219,16 +218,20 @@ def build_comparison_payload(runs_data: List[RunData]) -> Dict:
     
     system_names = [r.run_id for r in runs_data]
     
-    # Compute Paired Metrics
-    win_rate_matrix = {
-        "judge_score": compute_win_rates(joined_df, system_names, "judge_score"),
-        "hallucination_rate": compute_win_rates(joined_df, system_names, "hallucination_rate")
-    }
+    # Dynamically extract metric intersection across runs
+    logger.info("Extracting intersection of available metrics across runs.")
+    metric_cols_list = [set(r.results_df.columns) - {"sample_id", "domain", "system_name"} for r in runs_data]
+    intersection_metrics = list(set.intersection(*metric_cols_list))
+    logger.info(f"Dynamically discovered {len(intersection_metrics)} intersecting metrics: {intersection_metrics}")
     
-    pairwise_significance = {
-        "judge_score": compute_pairwise_significance(joined_df, system_names, "judge_score"),
-        "hallucination_rate": compute_pairwise_significance(joined_df, system_names, "hallucination_rate")
-    }
+    # Compute Paired Metrics dynamically
+    win_rate_matrix = {}
+    pairwise_significance = {}
+    for metric in intersection_metrics:
+        win_rate_matrix[metric] = compute_win_rates(joined_df, system_names, metric)
+        # Note: Depending on the metric, some tests might return p=NaN if the difference is strictly 0.
+        # But compute_pairwise_significance handles ties gracefully.
+        pairwise_significance[metric] = compute_pairwise_significance(joined_df, system_names, metric)
 
     # Determine the divergence cases for AP-RH4
     logger.info("Extracting divergence samples (where one system got judge_score=1.0 and another 0.0) for AP-RH4.")

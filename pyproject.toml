@@ -29,6 +29,8 @@ dependencies = [
     "litellm",
     "seaborn",
     "matplotlib",
+    "rouge-score",
+    "bert-score",
 ]
 
 [project.optional-dependencies]
