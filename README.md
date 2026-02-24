@@ -32,7 +32,13 @@ glass run configs/aa_lcr_full.yaml
 glass stats runs/<run_id>
 ```
 
-**5. Synthesize scientific insights across multiple runs:**
+**5. Re-evaluate a previous run with new metrics:**
+
+```bash
+glass run configs/new_metrics.yaml --re-evaluate <run_id>
+```
+
+**6. Synthesize scientific insights across multiple runs:**
 
 ```bash
 python3 research_harness/cli.py --runs <run_id_1> <run_id_2> --provider openai --model gpt-4o-mini
@@ -56,6 +62,11 @@ export PATH=$PATH:$(pwd)/bin
 **Run an evaluation:**
 ```bash
 bin/robo eval:run configs/aa_lcr_full.yaml
+```
+
+**Re-evaluate an existing inference run:**
+```bash
+bin/robo eval:re-eval configs/new_metrics.yaml <run_id>
 ```
 
 **Launch the research harness:**

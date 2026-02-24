@@ -42,6 +42,7 @@ Build a modular, open-source evaluation harness that rigorously tests the above 
 - **Plugin Registries:** Datasets, metrics, and judges use a `@registry.register("name")` decorator pattern. Adding a new component requires one file with no changes to orchestration code.
 - **Model-Aware Judge Rotation:** Judge assignment is aware of the underlying model in each SUT label, ensuring no self-judging. Configurable as `rotation` (each SUT judged by a competitor) or `fixed` (neutral third party).
 - **Multi-Turn Architecture:** The `SystemUnderTest` base class and `EvaluationSample` schema support multi-turn agent interactions, ready for future datasets. AA-LCR runs in single-shot mode.
+- **Evaluation Re-runs:** Bypassing inference execution entirely via `--re-evaluate <run_id>`. This creates appended directory branches (`dir_1`) copying entirely from the source inference history payload, executing Phase 2+ with modified runtime configurations cleanly.
 - **Domain-Stratified Sampling:** Subset runs preserve domain proportions across the 7 AA-LCR document categories.
 - **Statistical Analysis Module:** Bootstrap confidence intervals, one-tailed Wilcoxon signed-rank tests (primary hypothesis), and rank-biserial effect sizes. All computed as a separate pipeline phase.
 - **Human Evaluation Module:** Exports 20–40% of samples for human annotation, imports labels, and computes Cohen's Kappa between human and automated judge. Flags disagreements for qualitative review.
@@ -426,7 +427,7 @@ Phase 1 — Inference  (resumable via checkpoint.json)
       ├── Log: "[GLASS] Saved raw output → runs/{run_id}/inference/{sut_name}/sample_{id}.json"
       └── Update checkpoint.json
 
-Phase 2 — Evaluation
+Phase 2 — Evaluation (Orchestrated directly via --re-evaluate <run_id> skipping Phase 1)
   For each (sample, SUT) pair:
     ├── Load RawOutput from runs/{run_id}/inference/{sut_name}/sample_{id}.json
     ├── Run deterministic metrics (exact_match, soft_recall, verbosity, refusal, error)
