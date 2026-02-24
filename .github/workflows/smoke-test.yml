@@ -25,7 +25,8 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -e .[test]
+          pip install pytest
           
       - name: Install Robo
         run: |
@@ -35,8 +36,7 @@ jobs:
           
       - name: Run Unit Tests
         run: |
-          source venv/bin/activate
-          pytest tests/
+          venv/bin/pytest tests/
           
       - name: Run Pipeline Smoke Test
         run: |
