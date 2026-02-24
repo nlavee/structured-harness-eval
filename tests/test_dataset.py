@@ -7,6 +7,8 @@ import pytest
 from glass.datasets.aalcr import AALCRAdapter, _build_prompt, _build_documents_text
 from glass.datasets.registry import get_dataset_class
 
+in_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
+
 
 def test_registry():
     cls = get_dataset_class("aa_lcr")
@@ -59,6 +61,7 @@ def test_build_prompt_document_order():
     assert "First" in prompt[idx_2:idx_3]
 
 
+@pytest.mark.skipif(in_github_actions, reason="Depends on local files excluded from git")
 def test_aalcr_load_from_local():
     """Test that AALCRAdapter loads from local CSV and builds proper prompts."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -117,6 +120,7 @@ def test_aalcr_load_from_local():
         assert s.metadata["data_source_filenames"] == ["doc_a.txt", "doc_b.txt"]
 
 
+@pytest.mark.skipif(in_github_actions, reason="Depends on local files excluded from git")
 def test_aalcr_missing_csv_exits_early():
     """Test that missing local data causes an early exit with FileNotFoundError."""
 
@@ -128,6 +132,7 @@ def test_aalcr_missing_csv_exits_early():
         adapter.load(dataset_config=MockConfig())
 
 
+@pytest.mark.skipif(in_github_actions, reason="Depends on local files excluded from git")
 def test_aalcr_missing_extracted_dir_exits_early():
     """Test that missing extracted text dir causes early exit."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -144,6 +149,7 @@ def test_aalcr_missing_extracted_dir_exits_early():
             adapter.load(dataset_config=MockConfig())
 
 
+@pytest.mark.skipif(in_github_actions, reason="Depends on local files excluded from git")
 def test_aalcr_missing_document_file():
     """Test that a missing document file raises FileNotFoundError."""
     with tempfile.TemporaryDirectory() as tmpdir:
