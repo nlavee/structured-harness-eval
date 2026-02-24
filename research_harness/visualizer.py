@@ -13,6 +13,7 @@ from rich.logging import RichHandler
 # Add current directory to path so we can import schema
 sys.path.append(str(Path(__file__).parent))
 from schema import AggregatedData
+from naming import PlotType, get_plot_filename
 
 # Configure logging to write to STDOUT so the orchestrator can capture it
 logging.basicConfig(
@@ -430,31 +431,38 @@ def main():
     
     # 1. Forest Plots (Primary CIs) for every metric
     for metric in intersection_metrics:
-        plot_forest_cis(global_stats, systems, metric, out_dir / f"forest_ci_{metric}.png", sample_size, aliases=aliases)
+        out_path = out_dir / get_plot_filename(PlotType.FOREST, metric)
+        plot_forest_cis(global_stats, systems, metric, out_path, sample_size, aliases=aliases)
     
     # 2. Continuous distributions (Violin Plots) - Plotted individually to prevent clustering
     for metric in intersection_metrics:
-        plot_paired_violin(df, systems, [metric], out_dir / f"violin_dist_{metric}.png", aliases=aliases)
+        out_path = out_dir / get_plot_filename(PlotType.VIOLIN, metric)
+        plot_paired_violin(df, systems, [metric], out_path, aliases=aliases)
     
     # 3. Paired Differences - Plotted individually
     if len(systems) >= 2:
         for metric in intersection_metrics:
-            plot_paired_difference(df, systems[:2], [metric], out_dir / f"paired_diff_{metric}.png", aliases=aliases)
+            out_path = out_dir / get_plot_filename(PlotType.PAIRED_DIFF, metric)
+            plot_paired_difference(df, systems[:2], [metric], out_path, aliases=aliases)
     
     # 4. Win Rates & Significance Heatmaps
     for metric in intersection_metrics:
         if metric in win_rates:
-            plot_win_rate_matrix(win_rates.get(metric), systems, metric, out_dir / f"win_rate_{metric}.png", aliases=aliases)
+            out_path = out_dir / get_plot_filename(PlotType.WIN_RATE, metric)
+            plot_win_rate_matrix(win_rates.get(metric), systems, metric, out_path, aliases=aliases)
         if metric in p_values:
-            plot_significance_heatmap(p_values.get(metric), systems, metric, out_dir / f"significance_{metric}.png", aliases=aliases)
+            out_path = out_dir / get_plot_filename(PlotType.SIGNIFICANCE, metric)
+            plot_significance_heatmap(p_values.get(metric), systems, metric, out_path, aliases=aliases)
  
     # 5. Behavioral Radar Chart
-    plot_behavior_radar(global_stats, systems, out_dir / "radar_behavior.png", sample_size, aliases=aliases)
+    radar_path = out_dir / get_plot_filename(PlotType.RADAR)
+    plot_behavior_radar(global_stats, systems, radar_path, sample_size, aliases=aliases)
     
     # 6. Domain Breakdowns (For all dynamic metrics)
     if domain_stats:
         for metric in intersection_metrics:
-            plot_domain_heatmap(domain_stats, systems, metric, out_dir / f"domain_heatmap_{metric}.png", aliases=aliases)
+            out_path = out_dir / get_plot_filename(PlotType.DOMAIN_HEATMAP, metric)
+            plot_domain_heatmap(domain_stats, systems, metric, out_path, aliases=aliases)
             
     logger.info(f"Visualizations saved to {out_dir}")
 

@@ -164,7 +164,7 @@ def main():
         # 3. Run Synthesizer
         if not args.skip_synthesis:
             task3 = progress.add_task(f"[cyan]Step 3/4: LLM Synthesis ({args.provider}/{args.model})...", total=None)
-            synth_cmd = ["python", str(harness_dir / "synthesizer.py"), "--data", str(out_dir / "aggregated_data.json"), "--provider", args.provider, "--model", args.model, "--out-dir", str(out_dir)]
+            synth_cmd = [sys.executable, str(harness_dir / "synthesizer.py"), "--data", str(out_dir / "aggregated_data.json"), "--provider", args.provider, "--model", args.model, "--out-dir", str(out_dir)]
             run_step(synth_cmd, "Step 3/4: LLM Synthesis", progress, task3)
         else:
             console.print("[yellow]Step 3: LLM Qualitative Synthesis [SKIPPED][/yellow]")
@@ -172,7 +172,7 @@ def main():
         # 4. Run Vision Interpreter
         if not args.skip_synthesis:
             task4 = progress.add_task(f"[cyan]Step 4/4: Vision Interpretation ({args.provider}/{args.model})...", total=None)
-            vision_cmd = ["python", str(harness_dir / "vision_interpreter.py"), "--figures-dir", str(out_dir / "figures"), "--provider", args.provider, "--model", args.model, "--out-dir", str(out_dir)]
+            vision_cmd = [sys.executable, str(harness_dir / "vision_interpreter.py"), "--figures-dir", str(out_dir / "figures"), "--provider", args.provider, "--model", args.model, "--out-dir", str(out_dir)]
             run_step(vision_cmd, "Step 4/4: Vision Interpretation", progress, task4)
         else:
             console.print("[yellow]Step 4: Vision Interpretation [SKIPPED][/yellow]")

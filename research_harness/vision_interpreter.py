@@ -13,6 +13,8 @@ from rich.logging import RichHandler
 # Ensure the parent directory is in the path to allow absolute imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from research_harness.naming import parse_plot_filename
+
 # Load API keys from .env if present
 load_dotenv()
 
@@ -70,26 +72,35 @@ def main():
     with open(prompt_file, "r") as pf:
         vision_prompt = pf.read()
         
+    groups = {}
     for img_path in sorted(png_files):
-        logger.info(f"Analyzing {img_path.name}...")
+        _, metric = parse_plot_filename(img_path.name)
+        if metric:
+            groups.setdefault(metric, []).append(img_path)
+        else:
+            groups.setdefault("Other", []).append(img_path)
+
+    logger.info(f"Grouped {len(png_files)} images into {len(groups)} analysis batches.")
+
+    for metric, group_files in groups.items():
+        logger.info(f"Analyzing group '{metric}' ({len(group_files)} images)...")
         
         try:
-            base64_image = encode_image(img_path)
+            content = [{"type": "text", "text": vision_prompt.replace("{metric}", metric)}]
             
-            messages = [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": vision_prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/png;base64,{base64_image}"
-                            }
-                        }
-                    ]
-                }
-            ]
+            # Sort group_files to ensure consistent order (Forest -> Violin -> etc)
+            group_files.sort()
+            
+            for img_path in group_files:
+                base64_image = encode_image(img_path)
+                content.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/png;base64,{base64_image}"
+                    }
+                })
+            
+            messages = [{"role": "user", "content": content}]
             
             base_kwargs = {
                 "messages": messages,
@@ -108,21 +119,24 @@ def main():
                 insight_text = re.sub(r'<thought>.*?</thought>\s*', '', insight_text, flags=re.DOTALL).strip()
                 
                 with open(log_file, "a") as f:
-                    f.write(f"\n\n=== THOUGHT PROCESS FOR {img_path.name} ===\n")
+                    f.write(f"\n\n=== THOUGHT PROCESS FOR GROUP: {metric} ===\n")
                     f.write(thought_content)
             else:
-                logger.warning(f"No <thought> block found for {img_path.name}")
+                logger.warning(f"No <thought> block found for group: {metric}")
                 
             with open(out_file, "a") as f:
-                f.write(f"## Analysis of `{img_path.name}`\n\n")
-                f.write(f"![{img_path.name}](figures/{img_path.name})\n\n")
+                f.write(f"## Analysis of Metric: `{metric}`\n\n")
+                # Add all images in the group
+                for img_path in group_files:
+                    f.write(f"![{img_path.name}](figures/{img_path.name})\n")
+                f.write("\n")
                 f.write(insight_text)
                 f.write("\n\n---\n\n")
                 
-            logger.info(f"Successfully appended interpretation for {img_path.name}")
+            logger.info(f"Successfully appended interpretation for group: {metric}")
             
         except Exception as e:
-            logger.error(f"Failed to analyze {img_path.name}: {e}")
+            logger.error(f"Failed to analyze group {metric}: {e}")
             
     logger.info(f"All interpretations completed and saved to {out_file}")
 
