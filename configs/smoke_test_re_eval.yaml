@@ -1,0 +1,47 @@
+experiment:
+  name: "smoke_re_eval"
+  seed: 42
+
+dataset:
+  name: "aa_lcr"
+  samples: 2  # Small sample
+  domains: ["Legal"]
+
+systems:
+  - name: "stub_system"
+    type: "stub"
+    command: []
+
+metrics:
+  - exact_match
+  - soft_recall
+  - soft_f1
+  - verbosity
+  - latency_s
+  - refusal_rate
+  - error_rate
+  - answer_length
+  - citation_presence
+  - confidence_score
+  - answer_completeness
+  - reasoning_depth
+  - response_consistency
+
+judges:
+  strategy: "fixed"
+  fixed:
+    provider: "openai"
+    model: "gpt-4o-mini-2024-07-18"
+  templates:
+    correctness: "default"
+    hallucination: "default"
+
+statistics:
+  bootstrap_resamples: 100
+  alpha: 0.05
+  primary_test: "wilcoxon_one_tailed"
+  secondary_test: "wilcoxon_two_tailed"
+
+output:
+  runs_dir: "./runs"
+  log_level: "INFO"

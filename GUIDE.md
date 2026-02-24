@@ -148,6 +148,12 @@ glass run configs/aa_lcr_ablation.yaml
 glass run configs/aa_lcr_full.yaml --resume 20260221_120000_runtime_comparison_v1
 ```
 
+### Branch and Re-evaluate an Existing Run
+```bash
+glass run configs/new_metrics.yaml --re-evaluate 20260221_120000_runtime_comparison_v1
+```
+This inherits the `inference/` artifacts from the source run, bypassing expensive Phase 1 generation, and runs Phase 2+ with the new configuration, saving the results in a distinct, append-suffixed directory (e.g., `_1`).
+
 ### Task Runner (Alternative)
 You can also use the `robo` task runner for simplified command execution.
 
@@ -160,6 +166,9 @@ curl -sfL https://github.com/tj/robo/releases/download/v0.5.4/robo_linux_amd64 -
 ```bash
 # Run evaluation
 bin/robo eval:run configs/aa_lcr_subset.yaml
+
+# Branch and re-evaluate an existing inference run
+bin/robo eval:re-eval configs/new_metrics.yaml 20260221_120000_runtime_comparison_v1
 
 # Launch research harness
 bin/robo research:harness --runs <run_id_1> <run_id_2>
@@ -192,6 +201,9 @@ Also computes Cohen's Kappa if human labels have been imported.
 ```bash
 glass stats 20260221_120000_runtime_comparison_v1
 ```
+
+### `glass run <config> --re-evaluate <run_id>`
+Creates a branched run directory (e.g., `20260221_120000_runtime_comparison_v1_1`) copying `inference/`, `manifest.json`, and `glass.log` from the source run. Applies the newly supplied configuration against the cached inferences, bypassing Phase 1 (SUT execution), and outputting a perfectly isolated evaluation dataset.
 
 ### `glass export-human-eval <run_id>`
 Exports a stratified sample for human annotation. Guarantees ≥ 2 samples per domain.

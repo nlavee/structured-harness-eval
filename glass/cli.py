@@ -34,7 +34,8 @@ def cli():
 @cli.command()
 @click.argument("config_path", type=click.Path(exists=True))
 @click.option("--resume", type=click.STRING, help="Run ID to resume")
-def run(config_path, resume):
+@click.option("--re-evaluate", type=click.STRING, help="Run ID to branch and re-evaluate Phase 2+")
+def run(config_path, resume, re_evaluate):
     """Run the evaluation pipeline."""
     with open(config_path, "r") as f:
         config_data = yaml.safe_load(f)
@@ -42,11 +43,16 @@ def run(config_path, resume):
     config = Config(**config_data)
 
     run_id = None
+    re_evaluate_source = None
+    
     if resume:
         # If full path provided, extract ID
         run_id = os.path.basename(resume.rstrip("/"))
+        
+    if re_evaluate:
+        re_evaluate_source = os.path.basename(re_evaluate.rstrip("/"))
 
-    pipeline = Pipeline(config, run_id=run_id)
+    pipeline = Pipeline(config, run_id=run_id, re_evaluate_source=re_evaluate_source)
     pipeline.run()
 
 
