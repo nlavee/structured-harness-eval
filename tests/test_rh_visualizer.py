@@ -7,6 +7,7 @@ import pandas as pd
 # Add research_harness to path
 sys.path.append(str(Path(__file__).parent.parent / "research_harness"))
 import visualizer
+import naming
 from schema import AggregatedData
 
 @pytest.fixture
@@ -60,17 +61,53 @@ def test_visualizer_pipeline(mock_payload, tmp_path):
     df = pd.DataFrame(mock_payload["joined_dataframe"])
 
     # Attempt to plot each function
-    visualizer.plot_forest_cis(global_stats, sys_names, "judge_score", out_dir / "forest_test.png", sample_size)
-    assert (out_dir / "forest_test.png").exists()
+    forest_path = out_dir / naming.get_plot_filename(naming.PlotType.FOREST, "judge_score")
+    visualizer.plot_forest_cis(global_stats, sys_names, "judge_score", forest_path, sample_size)
+    assert forest_path.exists()
 
-    visualizer.plot_paired_violin(df, sys_names, ["hallucination_rate", "latency_s"], out_dir / "violin_test.png")
-    assert (out_dir / "violin_test.png").exists()
+    violin_path = out_dir / naming.get_plot_filename(naming.PlotType.VIOLIN, "hallucination_rate")
+    visualizer.plot_paired_violin(df, sys_names, ["hallucination_rate"], violin_path)
+    assert violin_path.exists()
 
-    visualizer.plot_paired_difference(df, sys_names[:2], ["judge_score", "soft_recall"], out_dir / "diff_test.png")
-    assert (out_dir / "diff_test.png").exists()
+    diff_path = out_dir / naming.get_plot_filename(naming.PlotType.PAIRED_DIFF, "judge_score")
+    visualizer.plot_paired_difference(df, sys_names[:2], ["judge_score"], diff_path)
+    assert diff_path.exists()
 
-    visualizer.plot_behavior_radar(global_stats, sys_names, out_dir / "radar_test.png", sample_size)
-    assert (out_dir / "radar_test.png").exists()
+    radar_path = out_dir / naming.get_plot_filename(naming.PlotType.RADAR)
+    visualizer.plot_behavior_radar(global_stats, sys_names, radar_path, sample_size)
+    assert radar_path.exists()
 
-    visualizer.plot_domain_heatmap(domain_stats, sys_names, "judge_score", out_dir / "heapmap_test.png")
-    assert (out_dir / "heapmap_test.png").exists()
+    heatmap_path = out_dir / naming.get_plot_filename(naming.PlotType.DOMAIN_HEATMAP, "judge_score")
+    visualizer.plot_domain_heatmap(domain_stats, sys_names, "judge_score", heatmap_path)
+    assert heatmap_path.exists()
+
+def test_visualizer_main(mock_payload, tmp_path):
+    """Test the main entry point to ensure it uses naming.py correctly."""
+    data_file = tmp_path / "aggregated_data.json"
+    data_file.write_text(json.dumps(mock_payload))
+    
+    out_dir = tmp_path / "figures"
+    
+    # Mock sys.argv
+    test_args = ["visualizer.py", "--data", str(data_file), "--out-dir", str(out_dir)]
+    
+    from unittest.mock import patch
+    with patch.object(sys, 'argv', test_args):
+        visualizer.main()
+        
+    # Check for expected files using naming utility
+    # judge_score is in intersection_metrics (keys of win_rate_matrix if we added it, 
+    # but in our mock we didn't add win_rate_matrix. Wait.)
+    
+    # Let's update mock_payload to include some metrics in win_rate_matrix so main() processes them
+    mock_payload["win_rate_matrix"] = {"judge_score": {}}
+    data_file.write_text(json.dumps(mock_payload))
+    
+    with patch.object(sys, 'argv', test_args):
+        visualizer.main()
+        
+    expected_forest = naming.get_plot_filename(naming.PlotType.FOREST, "judge_score")
+    assert (out_dir / expected_forest).exists()
+    
+    expected_radar = naming.get_plot_filename(naming.PlotType.RADAR)
+    assert (out_dir / expected_radar).exists()

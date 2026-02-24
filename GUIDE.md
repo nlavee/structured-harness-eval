@@ -16,10 +16,13 @@ This guide provides a comprehensive reference for setting up, building, testing,
   - `structured-harness` (Structured Execution Harness)
 
 ### Virtual Environment
-It is highly recommended to run GLASS in a virtual environment to manage dependencies.
+> [!IMPORTANT]
+> **Mandatory `venv` Usage**: All code execution, installation, and testing MUST be performed within a virtual environment. Installing dependencies globally is strongly discouraged (see AP-28 in `PLAN.md`).
 
 ```bash
+# Create venv if it doesn't exist
 python3 -m venv venv
+# Activate venv
 source venv/bin/activate
 ```
 
@@ -282,6 +285,8 @@ The harness populates the `research_insights/` directory with timestamped runs (
 - `logs/`: Chain-of-thought logging for the LLM Synthesizer.
 - `aggregated_data.json` & `aggregated_data.csv`: Paired inner-join data, rigorously typed via Pydantic `AggregatedData` schemas.
 - `insights_{timestamp}.md`: LLM qualitative synthesis grounded in paired divergence examples and per-domain accuracy tradeoffs.
+- **Multimodal Interpretation**: The harness automatically groups related plots (e.g., Forest, Violin, and Heatmap for a single metric) into batched multimodal LLM calls. This provides a holistic analysis of the data distribution and statistical significance in one context.
+- **Centralized Naming**: All visualization filenames are managed by `research_harness/naming.py`, ensuring consistency across the orchestrator, visualizer, and vision interpreter.
 
 ---
 

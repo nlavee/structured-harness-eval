@@ -422,8 +422,8 @@ def main():
     df = pd.DataFrame(payload["joined_dataframe"])
     
     # Dynamically extract all metrics present in the win_rate_matrix (computed by compare_runs)
-    win_rates = payload.get("win_rate_matrix", {})
-    p_values = payload.get("pairwise_significance", {})
+    win_rates = payload.get("win_rate_matrix") or {}
+    p_values = payload.get("pairwise_significance") or {}
     
     intersection_metrics = list(win_rates.keys())
     if not intersection_metrics:

@@ -6,6 +6,7 @@ import sys
 # Add research_harness to path
 sys.path.append(str(Path(__file__).parent.parent / "research_harness"))
 import vision_interpreter
+import naming
 
 @patch('vision_interpreter.litellm.completion')
 @patch('vision_interpreter.encode_image')
@@ -24,7 +25,8 @@ def test_vision_interpreter_main(mock_encode, mock_completion, tmp_path):
     # Mocking filesystem inputs
     figures_dir = tmp_path / "figures"
     figures_dir.mkdir()
-    (figures_dir / "forest_ci_exact_match.png").write_bytes(b"fake image data")
+    plot_file = naming.get_plot_filename(naming.PlotType.FOREST, "exact_match")
+    (figures_dir / plot_file).write_bytes(b"fake image data")
     
     out_dir = tmp_path / "insights"
     
@@ -49,4 +51,4 @@ def test_vision_interpreter_main(mock_encode, mock_completion, tmp_path):
     assert "The image shows a clear trend." in insight_content
     # Check that thought block is removed from the printed output
     assert "<thought>" not in insight_content
-    assert "![forest_ci_exact_match.png](figures/forest_ci_exact_match.png)" in insight_content
+    assert f"![{plot_file}](figures/{plot_file})" in insight_content
