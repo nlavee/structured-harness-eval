@@ -6,13 +6,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-from typing import Dict, List
+from typing import Dict, List, Optional
 import sys
 from rich.logging import RichHandler
 
 # Add current directory to path so we can import schema
 sys.path.append(str(Path(__file__).parent))
 from schema import AggregatedData
+from naming import PlotType, get_plot_filename
 
 # Configure logging to write to STDOUT so the orchestrator can capture it
 logging.basicConfig(
@@ -33,12 +34,31 @@ def enforce_ap_rh2_metadata(ax, sample_size: int):
                 ha='right', va='top', bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8),
                 fontsize=10)
 
-def plot_forest_cis(global_stats: Dict, systems: List[str], metric: str, out_path: Path, sample_size: int):
+def shorten_label(name: str, max_len: int = 25, aliases: Optional[Dict[str, str]] = None) -> str:
+    """Shortens long run IDs or uses an alias if available."""
+    if aliases and name in aliases:
+        return aliases[name]
+    
+    if len(name) <= max_len:
+        return name
+    
+    # Common run id format: YYYYMMDD_HHMMSS_name
+    # We want to keep the date bit and the name bit
+    parts = name.split('_')
+    if len(parts) >= 3:
+        # Keep YYYYMMDD and the last part
+        short_name = f"{parts[0]}...{parts[-1]}"
+        if len(short_name) <= max_len:
+            return short_name
+            
+    return name[:max_len-3] + "..."
+
+def plot_forest_cis(global_stats: Dict, systems: List[str], metric: str, out_path: Path, sample_size: int, aliases: Optional[Dict[str, str]] = None):
     """
     AP-RH2: Use forest plots for primary metric CIs instead of Dynamite plots.
     """
     logger.info(f"Generating Forest Plot for {metric}")
-    fig, ax = plt.subplots(figsize=(8, 4))
+    fig, ax = plt.subplots(figsize=(10, max(4, len(systems) * 0.8)))
     
     y_positions = np.arange(len(systems))
     means = []
@@ -46,8 +66,6 @@ def plot_forest_cis(global_stats: Dict, systems: List[str], metric: str, out_pat
     errors_high_list = []
     
     for system in systems:
-        # AP-RH5 extracts data natively. The aggregator maps the full payload.
-        # Systems are mapped by the full `run_id` directly to track independent stats.
         stats = global_stats.get(system, {}).get(metric, {})
         if not stats:
             means.append(np.nan)
@@ -56,19 +74,17 @@ def plot_forest_cis(global_stats: Dict, systems: List[str], metric: str, out_pat
             continue
             
         means.append(stats['mean'])
-        # matplotlib errorbar wants relative distance from mean, not absolute values
         errors_low = stats['mean'] - stats.get('ci_low', stats['mean'])
         errors_high = stats.get('ci_high', stats['mean']) - stats['mean']
         
         errors_low_list.append(errors_low)
         errors_high_list.append(errors_high)
 
-    # Convert to 2xN array for matplotlib
     errors = np.array([errors_low_list, errors_high_list])
     
     ax.errorbar(means, y_positions, xerr=errors, fmt='o', color='black', capsize=5, capthick=2, markersize=8)
     ax.set_yticks(y_positions)
-    ax.set_yticklabels(systems)
+    ax.set_yticklabels([shorten_label(s, aliases=aliases) for s in systems])
     ax.set_xlabel(f"{metric} (95% CI)")
     ax.set_title(f"Bootstrap Confidence Intervals: {metric}")
     
@@ -77,7 +93,7 @@ def plot_forest_cis(global_stats: Dict, systems: List[str], metric: str, out_pat
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
-def plot_paired_violin(df: pd.DataFrame, systems: List[str], metrics: List[str], out_path: Path):
+def plot_paired_violin(df: pd.DataFrame, systems: List[str], metrics: List[str], out_path: Path, aliases: Optional[Dict[str, str]] = None):
     """
     AP-RH2: Use Violin + Swarm plots for continuous distributions rather than bar charts.
     """
@@ -89,14 +105,13 @@ def plot_paired_violin(df: pd.DataFrame, systems: List[str], metrics: List[str],
         sample_id = row['sample_id']
         for system in systems:
             for metric in metrics:
-                # The data aggregator renames core df columns to `{system}_{metric}`
                 col_name = f"{system}_{metric}"
                 if col_name in row and pd.notna(row[col_name]):
                     try:
                         val = float(row[col_name])
                         melted_data.append({
                             "sample_id": sample_id,
-                            "System": system,
+                            "System": shorten_label(system, max_len=20, aliases=aliases),
                             "Metric": metric,
                             "Score": val
                         })
@@ -109,25 +124,31 @@ def plot_paired_violin(df: pd.DataFrame, systems: List[str], metrics: List[str],
         logger.warning(f"No numeric data found for violin distributions of {metrics}")
         return
 
-    g = sns.catplot(data=melted_df, x="System", y="Score", col="Metric", 
-                    hue="System", legend=False,
-                    kind="violin", inner=None, palette="muted", 
-                    sharey=False, height=5, aspect=0.8)
+    # Use plt.subplots instead of sns.catplot for better layout control and to avoid warnings
+    num_metrics = len(metrics)
+    fig, axes = plt.subplots(1, num_metrics, figsize=(6 * num_metrics, 6), squeeze=False)
     
-    # Overlay swarm plot to show raw points
-    g.map_dataframe(sns.stripplot, x="System", y="Score", color="black", alpha=0.5, size=3)
-    
-    # Add titles and N
-    for i, ax in enumerate(g.axes.flat):
-        ax.set_title(f"Distribution: {metrics[i]}")
+    for i, metric in enumerate(metrics):
+        ax = axes[0, i]
+        metric_df = melted_df[melted_df["Metric"] == metric]
+        
+        if metric_df.empty:
+            continue
+            
+        sns.violinplot(data=metric_df, x="System", y="Score", hue="System", 
+                       inner=None, palette="muted", ax=ax, legend=False)
+        sns.stripplot(data=metric_df, x="System", y="Score", color="black", 
+                      alpha=0.5, size=3, ax=ax)
+        
+        ax.set_title(f"Distribution: {metric}")
         enforce_ap_rh2_metadata(ax, len(df))
         ax.tick_params(axis='x', rotation=45)
         
-    plt.tight_layout()
+    plt.tight_layout(pad=1.5)
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
-def plot_behavior_radar(global_stats: Dict, systems: List[str], out_path: Path, sample_size: int):
+def plot_behavior_radar(global_stats: Dict, systems: List[str], out_path: Path, sample_size: int, aliases: Optional[Dict[str, str]] = None):
     """
     Generates a radar chart comparing scalar behavioral metrics between systems.
     Behavior metrics (e.g., verbosity) have wildly different scales, so we normalize.
@@ -156,12 +177,15 @@ def plot_behavior_radar(global_stats: Dict, systems: List[str], out_path: Path, 
     angles = np.linspace(0, 2 * np.pi, len(behavior_metrics), endpoint=False).tolist()
     angles += angles[:1] # close the loop
     
-    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+    # Increase figure size for long vertical legend
+    fig, ax = plt.subplots(figsize=(8, 10), subplot_kw=dict(polar=True))
     
     for i, system in enumerate(systems):
         values = data[:, i].tolist()
         values += values[:1] # close the loop
-        ax.plot(angles, values, linewidth=2, linestyle='solid', label=system)
+        # Use full alias/name in Radar chart legend per user request
+        label = shorten_label(system, max_len=100, aliases=aliases)
+        ax.plot(angles, values, linewidth=2, linestyle='solid', label=label)
         ax.fill(angles, values, alpha=0.25)
         
     ax.set_theta_offset(np.pi / 2)
@@ -172,15 +196,17 @@ def plot_behavior_radar(global_stats: Dict, systems: List[str], out_path: Path, 
     ax.set_yticks([0.25, 0.5, 0.75, 1.0])
     ax.set_yticklabels([]) # Hide radial ticks
     
-    plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
-    plt.title("Normalized Behavioral Profile")
+    # Move legend below the chart and make it vertical (ncol=1)
+    plt.legend(loc='upper left', bbox_to_anchor=(0.0, -0.1), ncol=1, frameon=True)
+    plt.title("Normalized Behavioral Profile", pad=30)
     enforce_ap_rh2_metadata(ax, sample_size)
     
-    plt.tight_layout()
+    # Adjust tight_layout to handle the legend below
+    plt.tight_layout(rect=[0, 0.2, 1, 0.95])
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
-def plot_domain_heatmap(domain_stats: Dict, systems: List[str], metric: str, out_path: Path):
+def plot_domain_heatmap(domain_stats: Dict, systems: List[str], metric: str, out_path: Path, aliases: Optional[Dict[str, str]] = None):
     """
     Plots a heatmap for a specific metric across different domains and systems.
     """
@@ -204,7 +230,8 @@ def plot_domain_heatmap(domain_stats: Dict, systems: List[str], metric: str, out
             row.append(val)
         data.append(row)
         
-    df = pd.DataFrame(data, index=domains, columns=systems)
+    short_systems = [shorten_label(s, aliases=aliases) for s in systems]
+    df = pd.DataFrame(data, index=domains, columns=short_systems)
     
     # Drop rows that are entirely NaN
     df = df.dropna(how='all')
@@ -212,7 +239,7 @@ def plot_domain_heatmap(domain_stats: Dict, systems: List[str], metric: str, out
         logger.warning(f"No valid data found for heatmap {metric}")
         return
         
-    plt.figure(figsize=(10, len(df) * 0.8 + 2))
+    plt.figure(figsize=(max(8, len(systems) * 1.5), len(df) * 0.8 + 2))
     cmap = "Blues" if metric in ["judge_score", "exact_match", "soft_recall"] else "Reds"
     
     sns.heatmap(df, annot=True, cmap=cmap, fmt=".2f", cbar_kws={'label': f'{metric} (Mean)'})
@@ -225,7 +252,7 @@ def plot_domain_heatmap(domain_stats: Dict, systems: List[str], metric: str, out
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
-def plot_paired_difference(df: pd.DataFrame, systems: List[str], metrics: List[str], out_path: Path):
+def plot_paired_difference(df: pd.DataFrame, systems: List[str], metrics: List[str], out_path: Path, aliases: Optional[Dict[str, str]] = None):
     """
     AP-RH2: Paired Sample Difference (Waterfall / Scatter).
     Calculates the delta (System A - System B) per sample and plots the distribution of deltas.
@@ -279,10 +306,10 @@ def plot_paired_difference(df: pd.DataFrame, systems: List[str], metrics: List[s
     # Add a zero line
     plt.axhline(0, color='red', linestyle='--', linewidth=2, label="No Difference")
     
-    plt.title(f"Paired Difference: {sys_a} (A) - {sys_b} (B)")
+    plt.title(f"Paired Difference: {shorten_label(sys_a, aliases=aliases)} (A) - {shorten_label(sys_b, aliases=aliases)} (B)")
     plt.ylabel(r"$\Delta$ (A - B)")
     plt.xlabel("Metric")
-    plt.legend()
+    plt.legend(title="Reference", labels=["No Difference", "Samples"])
     
     enforce_ap_rh2_metadata(plt.gca(), len(delta_df) // len(metrics) if len(metrics) > 0 else 0)
     
@@ -290,7 +317,7 @@ def plot_paired_difference(df: pd.DataFrame, systems: List[str], metrics: List[s
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
-def plot_win_rate_matrix(win_rates: Dict, systems: List[str], metric: str, out_path: Path):
+def plot_win_rate_matrix(win_rates: Dict, systems: List[str], metric: str, out_path: Path, aliases: Optional[Dict[str, str]] = None):
     """
     Plots a heatmap matrix of pairwise win rates (Row > Col).
     """
@@ -308,9 +335,10 @@ def plot_win_rate_matrix(win_rates: Dict, systems: List[str], metric: str, out_p
             row.append(val)
         data.append(row)
         
-    df = pd.DataFrame(data, index=systems, columns=systems)
+    short_systems = [shorten_label(s, aliases=aliases) for s in systems]
+    df = pd.DataFrame(data, index=short_systems, columns=short_systems)
     
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(max(8, len(systems) * 1.5), max(6, len(systems) * 1.0)))
     sns.heatmap(df, annot=True, cmap="Greens", fmt=".2f", vmin=0, vmax=1,
                 cbar_kws={'label': f'Win Rate (Row > Col) on {metric}'})
     
@@ -323,7 +351,7 @@ def plot_win_rate_matrix(win_rates: Dict, systems: List[str], metric: str, out_p
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
 
-def plot_significance_heatmap(p_values: Dict, systems: List[str], metric: str, out_path: Path):
+def plot_significance_heatmap(p_values: Dict, systems: List[str], metric: str, out_path: Path, aliases: Optional[Dict[str, str]] = None):
     """
     Plots a heatmap of Holm-Bonferroni corrected p-values.
     """
@@ -350,9 +378,10 @@ def plot_significance_heatmap(p_values: Dict, systems: List[str], metric: str, o
             data[i, j] = p_val
             data[j, i] = p_val # Symmetric
             
-    df = pd.DataFrame(data, index=systems, columns=systems)
+    short_systems = [shorten_label(s, aliases=aliases) for s in systems]
+    df = pd.DataFrame(data, index=short_systems, columns=short_systems)
     
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(max(8, len(systems) * 1.5), max(6, len(systems) * 1.0)))
     
     # Custom cmap: Green for significant (<0.05), Grey for non-significant
     # We use a masked array or just a sequential map where low is significant
@@ -385,6 +414,7 @@ def main():
         logger.error(f"FATAL: The incoming aggregated data failed Pydantic schema validation: {e}")
         sys.exit(1)
         
+    aliases = payload["metadata"].get("aliases", {})
     systems = payload["metadata"]["systems"]
     sample_size = payload["metadata"]["paired_sample_n"]
     global_stats = payload["global_statistics"]
@@ -392,8 +422,8 @@ def main():
     df = pd.DataFrame(payload["joined_dataframe"])
     
     # Dynamically extract all metrics present in the win_rate_matrix (computed by compare_runs)
-    win_rates = payload.get("win_rate_matrix", {})
-    p_values = payload.get("pairwise_significance", {})
+    win_rates = payload.get("win_rate_matrix") or {}
+    p_values = payload.get("pairwise_significance") or {}
     
     intersection_metrics = list(win_rates.keys())
     if not intersection_metrics:
@@ -401,31 +431,38 @@ def main():
     
     # 1. Forest Plots (Primary CIs) for every metric
     for metric in intersection_metrics:
-        plot_forest_cis(global_stats, systems, metric, out_dir / f"forest_ci_{metric}.png", sample_size)
+        out_path = out_dir / get_plot_filename(PlotType.FOREST, metric)
+        plot_forest_cis(global_stats, systems, metric, out_path, sample_size, aliases=aliases)
     
     # 2. Continuous distributions (Violin Plots) - Plotted individually to prevent clustering
     for metric in intersection_metrics:
-        plot_paired_violin(df, systems, [metric], out_dir / f"violin_dist_{metric}.png")
+        out_path = out_dir / get_plot_filename(PlotType.VIOLIN, metric)
+        plot_paired_violin(df, systems, [metric], out_path, aliases=aliases)
     
     # 3. Paired Differences - Plotted individually
     if len(systems) >= 2:
         for metric in intersection_metrics:
-            plot_paired_difference(df, systems[:2], [metric], out_dir / f"paired_diff_{metric}.png")
+            out_path = out_dir / get_plot_filename(PlotType.PAIRED_DIFF, metric)
+            plot_paired_difference(df, systems[:2], [metric], out_path, aliases=aliases)
     
     # 4. Win Rates & Significance Heatmaps
     for metric in intersection_metrics:
         if metric in win_rates:
-            plot_win_rate_matrix(win_rates.get(metric), systems, metric, out_dir / f"win_rate_{metric}.png")
+            out_path = out_dir / get_plot_filename(PlotType.WIN_RATE, metric)
+            plot_win_rate_matrix(win_rates.get(metric), systems, metric, out_path, aliases=aliases)
         if metric in p_values:
-            plot_significance_heatmap(p_values.get(metric), systems, metric, out_dir / f"significance_{metric}.png")
-
+            out_path = out_dir / get_plot_filename(PlotType.SIGNIFICANCE, metric)
+            plot_significance_heatmap(p_values.get(metric), systems, metric, out_path, aliases=aliases)
+ 
     # 5. Behavioral Radar Chart
-    plot_behavior_radar(global_stats, systems, out_dir / "radar_behavior.png", sample_size)
+    radar_path = out_dir / get_plot_filename(PlotType.RADAR)
+    plot_behavior_radar(global_stats, systems, radar_path, sample_size, aliases=aliases)
     
     # 6. Domain Breakdowns (For all dynamic metrics)
     if domain_stats:
         for metric in intersection_metrics:
-            plot_domain_heatmap(domain_stats, systems, metric, out_dir / f"domain_heatmap_{metric}.png")
+            out_path = out_dir / get_plot_filename(PlotType.DOMAIN_HEATMAP, metric)
+            plot_domain_heatmap(domain_stats, systems, metric, out_path, aliases=aliases)
             
     logger.info(f"Visualizations saved to {out_dir}")
 

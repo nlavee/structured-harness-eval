@@ -707,6 +707,12 @@ The config used in Phase 1 (inference) must be identical to the config used in P
 
 The stratified sampling in Phase 0 uses a seed. Without it, a "subset" run cannot be reproduced. The seed must be written to `manifest.json` and respected as a required config field, never optional.
 
+**AP-28 — Ignoring Virtual Environments**
+
+Installing dependencies or running tests in a global system python environment leads to dependency hell and non-reproducible environments. 
+
+**Correction:** All code execution, including tests and evaluations, MUST be performed within a virtual environment (`venv`). If a `venv` does not exist, it must be created before installing any dependencies or running any code. This is enforced to ensure that the environment is perfectly isolated and consistent across different development and execution stages.
+
 ---
 
 ### Category 7: Code Structure

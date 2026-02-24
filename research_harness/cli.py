@@ -26,6 +26,13 @@ def get_available_runs(runs_dir: Path) -> list[str]:
             runs.append(d.name)
     return sorted(runs, reverse=True)
 
+def parse_run_arg(arg: str) -> tuple[str, str | None]:
+    """Parses a run argument in run_id:alias format."""
+    if ":" in arg:
+        parts = arg.split(":", 1)
+        return parts[0], parts[1]
+    return arg, None
+
 def select_runs(available_runs: list[str]) -> list[str]:
     """Interactive prompt for the user to select runs."""
     console.print(Panel("Available GLASS Runs", style="bold blue"))
@@ -33,17 +40,26 @@ def select_runs(available_runs: list[str]) -> list[str]:
         console.print(f"[bold cyan][{i}][/bold cyan] {run}")
         
     console.print("\nEnter the indices of the runs you want to compare, separated by spaces (e.g., '0 2'):")
+    console.print("You can also add an alias after the index with a colon (e.g., '0:G3Pro 2:G3Flash').")
     while True:
         try:
             selection = input("> ").strip().split()
-            indices = [int(x) for x in selection]
-            selected_runs = [available_runs[i] for i in indices]
+            selected_runs = []
+            for item in selection:
+                if ":" in item:
+                    idx_str, alias = item.split(":", 1)
+                    idx = int(idx_str)
+                    selected_runs.append(f"{available_runs[idx]}:{alias}")
+                else:
+                    idx = int(item)
+                    selected_runs.append(available_runs[idx])
+
             if len(selected_runs) < 2:
                 console.print("[bold red]Error: Please select at least 2 runs for comparison.[/bold red]")
                 continue
             return selected_runs
         except (ValueError, IndexError):
-            console.print("[bold red]Invalid input. Please enter valid space-separated indices.[/bold red]")
+            console.print("[bold red]Invalid input. Please enter valid space-separated indices (and optional aliases).[/bold red]")
         except KeyboardInterrupt:
             console.print("\n[bold yellow]Exiting.[/bold yellow]")
             sys.exit(0)
@@ -101,8 +117,13 @@ def main():
     if not runs_to_compare:
         runs_to_compare = select_runs(available_runs)
     else:
-        # Validate provided runs
-        invalid_runs = [r for r in runs_to_compare if r not in available_runs]
+        # Validate provided runs (ignoring aliases for check)
+        invalid_runs = []
+        for r_arg in runs_to_compare:
+            r_id, _ = parse_run_arg(r_arg)
+            if r_id not in available_runs:
+                invalid_runs.append(r_id)
+        
         if invalid_runs:
             logger.error(f"Invalid runs provided: {invalid_runs}")
             sys.exit(1)
@@ -143,7 +164,7 @@ def main():
         # 3. Run Synthesizer
         if not args.skip_synthesis:
             task3 = progress.add_task(f"[cyan]Step 3/4: LLM Synthesis ({args.provider}/{args.model})...", total=None)
-            synth_cmd = ["python", str(harness_dir / "synthesizer.py"), "--data", str(out_dir / "aggregated_data.json"), "--provider", args.provider, "--model", args.model, "--out-dir", str(out_dir)]
+            synth_cmd = [sys.executable, str(harness_dir / "synthesizer.py"), "--data", str(out_dir / "aggregated_data.json"), "--provider", args.provider, "--model", args.model, "--out-dir", str(out_dir)]
             run_step(synth_cmd, "Step 3/4: LLM Synthesis", progress, task3)
         else:
             console.print("[yellow]Step 3: LLM Qualitative Synthesis [SKIPPED][/yellow]")
@@ -151,7 +172,7 @@ def main():
         # 4. Run Vision Interpreter
         if not args.skip_synthesis:
             task4 = progress.add_task(f"[cyan]Step 4/4: Vision Interpretation ({args.provider}/{args.model})...", total=None)
-            vision_cmd = ["python", str(harness_dir / "vision_interpreter.py"), "--figures-dir", str(out_dir / "figures"), "--provider", args.provider, "--model", args.model, "--out-dir", str(out_dir)]
+            vision_cmd = [sys.executable, str(harness_dir / "vision_interpreter.py"), "--figures-dir", str(out_dir / "figures"), "--provider", args.provider, "--model", args.model, "--out-dir", str(out_dir)]
             run_step(vision_cmd, "Step 4/4: Vision Interpretation", progress, task4)
         else:
             console.print("[yellow]Step 4: Vision Interpretation [SKIPPED][/yellow]")

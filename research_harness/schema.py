@@ -13,6 +13,7 @@ class RunMetadata(BaseModel):
     runs: List[str]
     systems: List[str]
     paired_sample_n: int
+    aliases: Optional[Dict[str, str]] = None
 
 class AggregatedData(BaseModel):
     model_config = ConfigDict(extra="ignore")

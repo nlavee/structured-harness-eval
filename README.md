@@ -92,10 +92,12 @@ GLASS answers a precise research question: **Does a Structured Execution Harness
 - **Model-Aware Judge Rotation:** Eliminates self-preferencing bias by ensuring no model judges its own output.
 - **Publication-Ready Stats:** Automated bootstrap confidence intervals and Wilcoxon signed-rank tests.
 - **Research Harness (`research_harness/`)**: 
-  - Cross-run aggregation enforcing scientific Anti-Patterns (AP-RH1 to AP-RH5).
+  - Cross-run aggregation enforcing scientific Anti-Patterns (AP-RH1 to AP-RH7).
   - Pydantic-validated data pipelines extracting Domain-level shifts.
   - Generates distribution-aware visualizations (Violin, Swarm, Forest CIs, Domain Heatmaps).
   - Configurable LLM Qualitative Synthesizer for paper-ready Discussion & Error Analysis grounded in Paired Divergences.
+  - **Multimodal Vision Interpretation**: Automated analysis of visualizations using batched multimodal LLM calls for improved cross-view context and efficiency.
+  - **Centralized Naming Utility**: Consistent file naming and metadata tracking via `naming.py`.
 
 ---
 

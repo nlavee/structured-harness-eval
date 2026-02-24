@@ -6,6 +6,7 @@ import sys
 # Add research_harness to path
 sys.path.append(str(Path(__file__).parent.parent / "research_harness"))
 import vision_interpreter
+import naming
 
 @patch('vision_interpreter.litellm.completion')
 @patch('vision_interpreter.encode_image')
@@ -24,7 +25,8 @@ def test_vision_interpreter_main(mock_encode, mock_completion, tmp_path):
     # Mocking filesystem inputs
     figures_dir = tmp_path / "figures"
     figures_dir.mkdir()
-    (figures_dir / "test_plot.png").write_bytes(b"fake image data")
+    plot_file = naming.get_plot_filename(naming.PlotType.FOREST, "exact_match")
+    (figures_dir / plot_file).write_bytes(b"fake image data")
     
     out_dir = tmp_path / "insights"
     
@@ -39,7 +41,8 @@ def test_vision_interpreter_main(mock_encode, mock_completion, tmp_path):
     log_content = log_files[0].read_text()
     
     assert "Visualizing data trends" in log_content
-    assert "=== THOUGHT PROCESS FOR test_plot.png ===" in log_content
+    # Now it groups by metric
+    assert "=== THOUGHT PROCESS FOR GROUP: exact_match ===" in log_content
     
     insight_files = list(out_dir.glob("visualization_interpretations_*.md"))
     assert len(insight_files) == 1
@@ -48,4 +51,4 @@ def test_vision_interpreter_main(mock_encode, mock_completion, tmp_path):
     assert "The image shows a clear trend." in insight_content
     # Check that thought block is removed from the printed output
     assert "<thought>" not in insight_content
-    assert "![test_plot.png](figures/test_plot.png)" in insight_content
+    assert f"![{plot_file}](figures/{plot_file})" in insight_content

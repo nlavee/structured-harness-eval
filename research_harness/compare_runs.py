@@ -43,7 +43,13 @@ class RunData:
 def load_runs(run_ids: List[str], base_dir: str = "runs") -> List[RunData]:
     runs = []
     base_path = Path(base_dir)
-    for run_id in run_ids:
+    for run_item in run_ids:
+        # Handle run_id:alias format
+        if ":" in run_item:
+            run_id, alias = run_item.split(":", 1)
+        else:
+            run_id = run_item
+        
         run_path = base_path / run_id
         if not run_path.exists():
             logger.error(f"Run directory not found: {run_path}")
@@ -207,7 +213,7 @@ def compute_pairwise_significance(df: pd.DataFrame, systems: List[str], metric: 
         
     return corrected_p_values
 
-def build_comparison_payload(runs_data: List[RunData]) -> Dict:
+def build_comparison_payload(runs_data: List[RunData], aliases: Optional[Dict[str, str]] = None) -> Dict:
     """Builds the final aggregated JSON for the visualizer and LLM Synthesizer."""
     if len(runs_data) < 2:
         raise ValueError("Need at least 2 runs to compare.")
@@ -248,7 +254,8 @@ def build_comparison_payload(runs_data: List[RunData]) -> Dict:
         "metadata": {
             "runs": [r.run_id for r in runs_data],
             "systems": system_names,
-            "paired_sample_n": len(joined_df)
+            "paired_sample_n": len(joined_df),
+            "aliases": aliases
         },
         "global_statistics": global_stats,
         "domain_statistics": domain_stats,
@@ -275,8 +282,19 @@ def main():
     args = parser.parse_args()
     
     try:
-        runs_data = load_runs(args.runs, args.runs_dir)
-        payload = build_comparison_payload(runs_data)
+        # Extract aliases if provided in run_id:alias format
+        aliases = {}
+        cleaned_run_ids = []
+        for r in args.runs:
+            if ":" in r:
+                rid, alias = r.split(":", 1)
+                aliases[rid] = alias
+                cleaned_run_ids.append(rid)
+            else:
+                cleaned_run_ids.append(r)
+
+        runs_data = load_runs(args.runs, args.runs_dir) # load_runs already handles mapping
+        payload = build_comparison_payload(runs_data, aliases=aliases if aliases else None)
         
         out_path = Path(args.out)
         out_path.parent.mkdir(parents=True, exist_ok=True)
