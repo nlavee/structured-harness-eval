@@ -4,6 +4,14 @@
 
 ---
 
+## Examples
+
+To see GLASS in action, browse the **[examples/](./examples/)** directory.
+- **[Example Run Artifacts](./examples/runs/)**: Raw outputs, results, and rigorous statistics.
+- **[Example Research Insights](./examples/research_insights/)**: Distribution-aware visualizations and synthesized paper-ready Discussion sections.
+
+---
+
 ## Quick Start
 
 **1. Install GLASS:**
