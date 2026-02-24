@@ -6,6 +6,7 @@ dataset:
   name: "aa_lcr"
   samples: 2  # Small sample
   domains: ["Legal"]
+  dataset_folder: "tests/fixtures/aa_lcr_smoke/AA-LCR_extracted-text/lcr"
 
 systems:
   - name: "stub_system"
