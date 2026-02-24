@@ -111,6 +111,46 @@ $$P = \frac{|\text{pred} \cap \text{gold}|}{|\text{pred}|}, \quad R = \frac{|\te
 
 ---
 
+### `bert_score_f1`
+
+| Property | Value |
+|:---|:---|
+| Category | Correctness |
+| Range | `[0.0, 1.0]` or `None` |
+| Requires Judge | No |
+
+**Definition.** Token-level F1 semantic similarity computed with `bert_score`.
+
+**Cross-model comparison.** Useful as a semantic proxy for correctness. Compare with `exact_match` and `soft_f1`.
+
+---
+
+### `rouge_score_f1`
+
+| Property | Value |
+|:---|:---|
+| Category | Correctness |
+| Range | `[0.0, 1.0]` or `None` |
+| Requires Judge | No |
+
+**Definition.** Token-level F1 structural similarity between gold answer and prediction, computed via `rougeL` (longest common subsequence).
+
+**Cross-model comparison.** Better handles word reordering than `exact_match`.
+
+---
+
+### `rouge_score_recall`
+
+| Property | Value |
+|:---|:---|
+| Category | Correctness |
+| Range | `[0.0, 1.0]` or `None` |
+| Requires Judge | No |
+
+**Definition.** Token-level recall computed with `rougeL`.
+
+**Cross-model comparison.** Measures presence of expected facts inside a potentially verbous prediction sequence.
+
 ### `answer_completeness`
 
 | Property | Value |
@@ -296,6 +336,9 @@ $$\text{error\_rate} = \mathbb{1}[\text{exit\_code} \neq 0 \;\lor\; \text{error\
 | `exact_match` | Correctness | {0, 1} | ✗ | Yes |
 | `soft_recall` | Correctness | [0, 1] | ✗ | Yes |
 | `soft_f1` | Correctness | [0, 1] | ✗ | Yes |
+| `bert_score_f1` | Correctness | [0, 1] | ✗ | Yes |
+| `rouge_score_f1` | Correctness | [0, 1] | ✗ | Yes |
+| `rouge_score_recall` | Correctness | [0, 1] | ✗ | Yes |
 | `answer_completeness` | Correctness | [0, 1] | ✗ | Yes |
 | `verbosity` | Behavioral | [0, ∞) | ✗ | Yes |
 | `answer_length` | Behavioral | [0, ∞) | ✗ | Yes |
