@@ -1,4 +1,4 @@
-name: Smoke Test
+name: Unit Tests
 
 on:
   pull_request:
@@ -28,13 +28,6 @@ jobs:
           pip install -e .[test]
           pip install pytest
           
-      - name: Install Robo
+      - name: Run Unit Tests
         run: |
-          mkdir -p bin
-          curl -sfL https://github.com/tj/robo/releases/download/v0.5.4/robo_linux_amd64 -o bin/robo
-          chmod +x bin/robo
-          
-      - name: Run Pipeline Smoke Test
-        run: |
-          export PATH=$(pwd)/venv/bin:$PATH
-          bin/robo eval:run configs/smoke_test.yaml
+          PYTHONPATH=. venv/bin/pytest tests/
