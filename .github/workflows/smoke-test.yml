@@ -40,5 +40,5 @@ jobs:
           
       - name: Run Pipeline Smoke Test
         run: |
-          # Robo automatically explicitly activates the venv internal to its shell execution
+          export PATH=$(pwd)/venv/bin:$PATH
           bin/robo eval:run configs/smoke_test.yaml
