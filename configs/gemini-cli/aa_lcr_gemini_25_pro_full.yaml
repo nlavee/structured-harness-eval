@@ -20,6 +20,8 @@ metrics:
   - exact_match
   - soft_recall
   - soft_f1
+  - judge_score
+  - hallucination_rate
   - latency_s
   - verbosity
   - refusal_rate
