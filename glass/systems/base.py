@@ -22,6 +22,7 @@ class RawOutput(BaseModel):
     exit_code: int
     stderr: str
     error_type: Optional[Literal["timeout", "api_error", "refusal", "malformed", "crash"]] = None
+    tool_calls: Optional[List[dict]] = None
     timestamp: str
 
 

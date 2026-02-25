@@ -12,6 +12,7 @@ systems:
   - name: "gemini-cli"
     type: "gemini"
     model: "gemini-2.5-pro"
+    output_format: "stream-json"
     command: null
     timeout_s: 600
     env: {}

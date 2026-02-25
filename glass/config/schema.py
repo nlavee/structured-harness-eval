@@ -25,6 +25,7 @@ class SystemConfig(BaseModel):
     quiet: bool = False  # When True, suppress CoT/reasoning output
     timeout_s: int = 600
     env: Dict[str, str] = Field(default_factory=dict)
+    output_format: Optional[str] = None
 
 
 class JudgeProviderConfig(BaseModel):
