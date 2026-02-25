@@ -33,6 +33,7 @@ class GeminiSystem(SystemUnderTest):
         """Parse streaming JSONL from Gemini CLI output."""
         full_output = ""
         full_reasoning = ""
+        tool_calls = []
 
         try:
             for line in result.output.strip().splitlines():
@@ -48,11 +49,18 @@ class GeminiSystem(SystemUnderTest):
                     if "thinking" in data and not self.config.quiet:
                          full_reasoning += data["thinking"]
 
+                # Capture tool calls and results
+                elif data.get("type") in ["tool_use", "tool_result"]:
+                    tool_calls.append(data)
+
             if full_output:
                  result.output = full_output
             
             if full_reasoning:
                  result.chain_of_thought = full_reasoning
+                 
+            if tool_calls:
+                 result.tool_calls = tool_calls
 
         except json.JSONDecodeError:
             logger.debug("Could not parse Gemini JSONL output, keeping raw output")

@@ -85,6 +85,8 @@ def test_gemini_stream_json_parsing(mock_popen, sample):
     mock_output = (
         '{"type": "init", "session": "v1"}\n'
         '{"type": "message", "role": "assistant", "content": "I am thinking", "thinking": "Internal thought process"}\n'
+        '{"type": "tool_use", "name": "search", "arguments": {}}\n'
+        '{"type": "tool_result", "name": "search", "content": "Result"}\n'
         '{"type": "message", "role": "assistant", "content": " The final answer is 42."}\n'
         '{"type": "result", "status": "success"}\n'
     )
@@ -99,6 +101,10 @@ def test_gemini_stream_json_parsing(mock_popen, sample):
 
     assert output.output == "I am thinking The final answer is 42."
     assert output.chain_of_thought == "Internal thought process"
+    assert output.tool_calls == [
+        {"type": "tool_use", "name": "search", "arguments": {}},
+        {"type": "tool_result", "name": "search", "content": "Result"}
+    ]
 
 
 # --------------------------------------------------------------------------- #
