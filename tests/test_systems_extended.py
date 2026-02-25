@@ -76,6 +76,31 @@ def test_gemini_cot_capture(mock_popen, sample):
     assert output.chain_of_thought == "thinking about it..."
 
 
+@patch("glass.systems.base.subprocess.Popen")
+def test_gemini_stream_json_parsing(mock_popen, sample):
+    """Test correctly parsing Gemini CLI stream-json output."""
+    proc = MagicMock()
+    
+    # Mocking a sequence of JSONL events
+    mock_output = (
+        '{"type": "init", "session": "v1"}\n'
+        '{"type": "message", "role": "assistant", "content": "I am thinking", "thinking": "Internal thought process"}\n'
+        '{"type": "message", "role": "assistant", "content": " The final answer is 42."}\n'
+        '{"type": "result", "status": "success"}\n'
+    )
+    
+    proc.communicate.return_value = (mock_output.encode("utf-8"), b"")
+    proc.returncode = 0
+    mock_popen.return_value = proc
+
+    config = SystemConfig(name="gemini-cli", type="gemini", output_format="stream-json")
+    sys = GeminiSystem(config)
+    output = sys.generate(sample)
+
+    assert output.output == "I am thinking The final answer is 42."
+    assert output.chain_of_thought == "Internal thought process"
+
+
 # --------------------------------------------------------------------------- #
 # Codex system                                                                #
 # --------------------------------------------------------------------------- #
