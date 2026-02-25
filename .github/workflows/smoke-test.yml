@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  test:
+  smoke-test:
     runs-on: ubuntu-latest
     
     steps:
