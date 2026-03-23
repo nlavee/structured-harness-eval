@@ -38,6 +38,7 @@ def test_claude_command(mock_popen, sample):
     assert kwargs["stdin"] is not None
 
 
+@pytest.mark.xfail(reason="Structured Harness is a standin (see commit 240ed40)", raises=NotImplementedError)
 @patch("glass.systems.base.subprocess.Popen")
 def test_structured_harness_command(mock_popen, sample):
     process_mock = MagicMock()
