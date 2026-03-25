@@ -347,3 +347,15 @@ def test_adapter_empty_dataset():
 
         assert adapter.get_tasks() == []
         assert adapter.get_samples() == []
+
+
+def test_adapter_resolve_data_dir_default(monkeypatch):
+    """Test _resolve_data_dir fallback to default path."""
+    # Mock _DEFAULT_DATA_DIR to a temporary location
+    with tempfile.TemporaryDirectory() as tmpdir:
+        from glass.datasets import finch
+        monkeypatch.setattr(finch, "_DEFAULT_DATA_DIR", tmpdir)
+        
+        adapter = FinchAdapter()
+        resolved = adapter._resolve_data_dir(None)
+        assert resolved == os.path.abspath(tmpdir)

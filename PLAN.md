@@ -773,6 +773,33 @@ CLI tools may output UTF-8, Latin-1, or include ANSI escape sequences. Always de
 
 ---
 
+## Sequential Accounting Evaluation Pipeline (Finch)
+
+> **Goal:** Reconstruct a stateful, multi-period accounting evaluation harness using the [FinWorkBench/Finch](https://huggingface.co/datasets/FinWorkBench/Finch) dataset to measure how LLM errors compound over time.
+
+This pipeline follows a 4-phase rollout plan. See [**accounting.md**](./accounting.md) for the full design spec.
+
+### Phase 1: Dataset & Sequencing [IN PROGRESS]
+
+- **Step 1.1: Dataset Ingestion** [COMPLETED]
+  - Implement `FinchAdapter` (`glass/datasets/finch.py`)
+  - Create `scripts/download_finch.py` for HuggingFace retrieval
+  - Map 172 tasks across Corporate Finance, Energy, and Retail domains
+- **Step 1.2: Chain Candidate Identification** [COMPLETED]
+  - Create `scripts/explore_finch.py` with heuristic scoring (task count, macro-category coverage, shared source patterns)
+  - Generate `chains/candidates.json` for manual curation
+- **Step 1.3: Chain Curation & YAML Schema** [TODO]
+  - Define sequential chain YAML format
+  - Manually annotate 10-20 gold chains from Enron/World Bank corpora
+- **Step 1.4: DuckDB State Store** [TODO]
+  - Implement persistent ledger schema for transaction/journal entry tracking
+- **Step 1.5: Spreadsheet Ingestion Pipeline** [TODO]
+  - Automated extraction of Finch `.xlsx` data into DuckDB
+- **Step 1.6: Deterministic Scorer** [TODO]
+  - Layer 1 checks (Assets == Liabilities + Equity, reconciliation asserts)
+
+---
+
 ## Implementation Roadmap
 
 For an LLM or developer implementing GLASS, follow this build order to strictly adhere to the architecture:
@@ -815,3 +842,5 @@ For an LLM or developer implementing GLASS, follow this build order to strictly 
 
 7.  **Verification:**
     *   Run `glass run configs/aa_lcr_subset.yaml` to verify end-to-end flow.
+    *   Verify dataset adapters: `pytest tests/test_dataset.py tests/test_finch_dataset.py`.
+    *   Verify accounting exploration logic: `pytest tests/test_finch_exploration.py`.
