@@ -31,6 +31,8 @@ dependencies = [
     "matplotlib",
     "rouge-score",
     "bert-score",
+    "openpyxl",
+    "duckdb",
 ]
 
 [project.optional-dependencies]

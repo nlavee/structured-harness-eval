@@ -70,19 +70,19 @@ data/AA-LCR/
 └── README.md
 ```
 
-To download to a custom location, use `--dest`:
+### Finch Dataset Setup (Sequential Accounting)
+
+Finch is used for the sequential, multi-period accounting evaluation pipeline. Run the download script to fetch task metadata and associated source/reference files from HuggingFace:
+
 ```bash
-python scripts/download_aalcr.py --dest /path/to/data
+python scripts/download_finch.py
 ```
 
-You can customize the dataset path in your config via the `dataset_folder` option:
-```yaml
-dataset:
-  name: "aa_lcr"
-  dataset_folder: "data/AA-LCR/AA-LCR_extracted-text/lcr"  # path to extracted text
-```
+This populates `data/Finch/` with task JSONs and organized subdirectories for source spreadsheets. You can then run the exploration script to identify chain-able candidates:
 
-If the local data is not found, GLASS will exit early with a clear error message.
+```bash
+python scripts/explore_finch.py
+```
 
 ### Build Distribution
 ```bash
@@ -108,6 +108,8 @@ pytest
 |------|----------------|
 | `test_scaffolding.py` | Config schemas, Pydantic models, ABCs, `RawOutput.command` (AP-8) |
 | `test_dataset.py` | Registry lookup, AA-LCR adapter mock load |
+| `test_finch_dataset.py` | Finch adapter: parsing, grouping, loading (22 tests) |
+| `test_finch_exploration.py` | Finch exploration: scoring, grouping, parsing (6 tests) |
 | `test_systems.py` | Claude + Structured Harness command construction |
 | `test_systems_extended.py` | Gemini, Codex, Stub; encoding safety (AP-27); timeout handling |
 | `test_metrics.py` | Happy-path for all metrics |

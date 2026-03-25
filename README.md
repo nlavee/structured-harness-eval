@@ -22,10 +22,14 @@ cd glass
 pip install -e .
 ```
 
-**2. Download the AA-LCR dataset:**
+**2. Download the datasets:**
 
 ```bash
+# Main benchmark dataset (AA-LCR)
 python scripts/download_aalcr.py
+
+# Sequential Accounting dataset (Finch)
+python scripts/download_finch.py
 ```
 
 **3. Run a full evaluation:**
@@ -111,7 +115,11 @@ GLASS answers a precise research question: **Does a Structured Execution Harness
 
 ## Systems & Dataset
 
-GLASS benchmark defaults to the [`ArtificialAnalysis/AA-LCR`](https://huggingface.co/datasets/ArtificialAnalysis/AA-LCR) dataset (100 multi-document questions) and evaluates:
+GLASS benchmark defaults to the [`ArtificialAnalysis/AA-LCR`](https://huggingface.co/datasets/ArtificialAnalysis/AA-LCR) dataset (100 multi-document questions).
+
+Additionally, GLASS supports the [**FinWorkBench/Finch**](https://huggingface.co/datasets/FinWorkBench/Finch) dataset (172 enterprise accounting/finance tasks) for **Sequential Accounting Evaluation**. This evaluates LLMs on multi-period workflows where errors compound over time.
+
+Evaluated systems:
 - **Claude Code** vs. **Structured Execution Harness (Claude)**
 - **Gemini CLI** vs. **Structured Execution Harness (Gemini)**
 - **Codex CLI (GPT 5)** vs. **Structured Execution Harness (GPT 5)**
